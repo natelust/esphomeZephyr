@@ -169,7 +169,12 @@ def generate_cpp_contents(config):
 
 
 def write_cpp_file():
-    writer.write_platformio_project()
+    if CORE.target_platform == "zephyr":
+        result = writer.write_zephyr_project()
+        if result != 0:
+            return result
+    else:
+        writer.write_platformio_project()
 
     code_s = indent(CORE.cpp_main_section)
     writer.write_cpp(code_s)
@@ -180,11 +185,14 @@ def compile_program(args, config):
     from esphome import platformio_api
 
     _LOGGER.info("Compiling app...")
-    rc = platformio_api.run_compile(config, CORE.verbose)
-    if rc != 0:
-        return rc
-    idedata = platformio_api.get_idedata(config)
-    return 0 if idedata is not None else 1
+    if CORE.target_platform == "zephyr":
+        return 0
+    else:
+        rc = platformio_api.run_compile(config, CORE.verbose)
+        if rc != 0:
+            return rc
+        idedata = platformio_api.get_idedata(config)
+        return 0 if idedata is not None else 1
 
 
 def upload_using_esptool(config, port):

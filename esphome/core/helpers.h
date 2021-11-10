@@ -291,7 +291,7 @@ template<typename T, typename... X> class TemplatableValue {
 
  protected:
   enum {
-    EMPTY,
+    EMPTYT,
     VALUE,
     LAMBDA,
   } type_;

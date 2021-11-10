@@ -6,8 +6,9 @@ ALLOWED_NAME_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789-_"
 
 PLATFORM_ESP32 = "esp32"
 PLATFORM_ESP8266 = "esp8266"
+PLATFORM_ZEPHYR = "zephyr"
 
-TARGET_PLATFORMS = [PLATFORM_ESP32, PLATFORM_ESP8266]
+TARGET_PLATFORMS = [PLATFORM_ESP32, PLATFORM_ESP8266, PLATFORM_ZEPHYR]
 TARGET_FRAMEWORKS = ["arduino", "esp-idf"]
 
 # See also https://github.com/platformio/platform-espressif8266/releases

@@ -580,6 +580,10 @@ class EsphomeCore:
         return self.target_platform == "esp32"
 
     @property
+    def is_zephyr(self):
+        return self.target_platform == "zephyr"
+
+    @property
     def target_framework(self):
         return self.data[KEY_CORE][KEY_TARGET_FRAMEWORK]
 

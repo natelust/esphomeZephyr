@@ -22,6 +22,7 @@ from esphome.helpers import (
 )
 from esphome.storage_json import StorageJSON, storage_path
 from esphome import loader
+from .zephyr_writer import ZephyrDirectoryBuilder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,6 +261,11 @@ def write_platformio_project():
     if not get_bool_env(ENV_NOGITIGNORE):
         write_gitignore()
     write_platformio_ini(content)
+
+
+def write_zephyr_project():
+    builder = ZephyrDirectoryBuilder()
+    return builder.run()
 
 
 DEFINES_H_FORMAT = ESPHOME_H_FORMAT = """\

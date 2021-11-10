@@ -526,6 +526,7 @@ def only_with_framework(frameworks):
 
 only_on_esp32 = only_on("esp32")
 only_on_esp8266 = only_on("esp8266")
+only_on_zephyr = only_on("zephyr")
 only_with_arduino = only_with_framework("arduino")
 only_with_esp_idf = only_with_framework("esp-idf")
 
