@@ -15,7 +15,7 @@ class CallBackWrapper {
    void operator () (const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
      this->func(this->arg);
    }
-}
+};
 
 class ZephyrGPIOPin : public InternalGPIOPin{
  public:

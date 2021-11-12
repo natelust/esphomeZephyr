@@ -29,6 +29,7 @@ from esphome.util import (
     get_serial_ports,
 )
 from esphome.log import color, setup_log, Fore
+from esphome.zephyr_writer import ZephyrDirectoryBuilder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,23 +171,26 @@ def generate_cpp_contents(config):
 
 def write_cpp_file():
     if CORE.target_platform == "zephyr":
-        result = writer.write_zephyr_project()
-        if result != 0:
-            return result
+        with ZephyrDirectoryBuilder() as builder:
+            result = builder.run()
+            if result == 0:
+                code_s = indent(CORE.cpp_main_section)
+                writer.write_cpp(code_s)
+        return result
     else:
         writer.write_platformio_project()
-
-    code_s = indent(CORE.cpp_main_section)
-    writer.write_cpp(code_s)
-    return 0
+        code_s = indent(CORE.cpp_main_section)
+        writer.write_cpp(code_s)
+        return 0
 
 
 def compile_program(args, config):
     from esphome import platformio_api
+    from esphome import zephyr_api
 
     _LOGGER.info("Compiling app...")
     if CORE.target_platform == "zephyr":
-        return 0
+        return zephyr_api.run_compile()
     else:
         rc = platformio_api.run_compile(config, CORE.verbose)
         if rc != 0:

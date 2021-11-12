@@ -263,11 +263,6 @@ def write_platformio_project():
     write_platformio_ini(content)
 
 
-def write_zephyr_project():
-    builder = ZephyrDirectoryBuilder()
-    return builder.run()
-
-
 DEFINES_H_FORMAT = ESPHOME_H_FORMAT = """\
 #pragma once
 {}

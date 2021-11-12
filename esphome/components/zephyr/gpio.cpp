@@ -72,10 +72,10 @@ std::string ZephyrGPIOPin::dump_summary() const {
 bool ZephyrGPIOPin::digital_read() {
   return bool(gpio_pin_get_raw(this->device, this->pin_)) != inverted_; 
 }
-void ESP8266GPIOPin::digital_write(bool value) {
+void ZephyrGPIOPin::digital_write(bool value) {
   gpio_pin_set_raw(this->device, pin_, value != inverted_ ? 1 : 0);  // NOLINT
 }
-void ESP8266GPIOPin::detach_interrupt() {
+void ZephyrGPIOPin::detach_interrupt() {
   gpio_remove_callback(this->device, this->pin_callback_struct);
   delete this->callback;
   this->callback = nullptr;

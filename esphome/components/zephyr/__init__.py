@@ -31,9 +31,9 @@ def set_core_data(config):
     CORE.data[ZEPHYR_CORE_KEY][ZEPHYR_BASE] = config[ZEPHYR_BASE]
     CORE.data[ZEPHYR_CORE_KEY][KCONFIG_KEY] = config[KCONFIG_KEY]
     Kconfigs = CORE.data[ZEPHYR_CORE_KEY][KCONFIG_KEY]
-    Kconfigs["CONFIG_CPLUSPLUS"] = "Y"
+    Kconfigs["CONFIG_CPLUSPLUS"] = "y"
     Kconfigs["CONFIG_NEWLIB_LIBC"] = "y"
-    Kconfigs["CONFIG_LLIB_CPLUSPLUS"] = "y"
+    Kconfigs["CONFIG_LIB_CPLUSPLUS"] = "y"
     Kconfigs["CONFIG_STD_CPP14"] = "y"
 
     return config
