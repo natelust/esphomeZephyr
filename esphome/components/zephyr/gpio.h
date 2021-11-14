@@ -2,19 +2,16 @@
 
 #include "esphome/core/hal.h"
 #include <drivers/gpio.h>
+#include <devicetree.h>
 #include <vector>
 
 namespace esphome {
 namespace zephyr{
 
-class CallBackWrapper {
-  private:
-    void (*func)(void *);
-    void *arg;
-  public:
-   void operator () (const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
-     this->func(this->arg);
-   }
+struct GPIOInterruptWrapper {
+  gpio_callback pin_callback_struct;
+  void (*func)(void *);
+  void *arg;
 };
 
 class ZephyrGPIOPin : public InternalGPIOPin{
@@ -22,7 +19,10 @@ class ZephyrGPIOPin : public InternalGPIOPin{
   void set_pin(uint8_t pin) { pin_ = pin; }
   void set_inverted(bool inverted) { inverted_ = inverted; }
   void set_flags(gpio::Flags flags) { flags_ = flags; }
-  void set_device(struct device * device) {this->device = device;}
+  void set_device(const struct device * device) {this->device = device;}
+  void set_device_label(const char * label) {
+    this->set_device(device_get_binding(label));
+  }
   void setup() override { pin_mode(flags_); }
   void pin_mode(gpio::Flags flags) override;
   bool digital_read() override;
@@ -33,15 +33,23 @@ class ZephyrGPIOPin : public InternalGPIOPin{
   uint8_t get_pin() const override { return pin_; }
   bool is_inverted() const override { return inverted_; }
 
+  ZephyrGPIOPin() {
+    wrapper = new GPIOInterruptWrapper();
+  }
+
+  ~ZephyrGPIOPin() {
+    delete wrapper;
+  }
+
  protected:
   void attach_interrupt(void (*func)(void *), void *arg, gpio::InterruptType type) const override;
 
-  uint8_t pin_;
-  bool inverted_;
-  gpio::Flags flags_;
-  struct device * device = nullptr;
-  CallBackWrapper * callback = nullptr;
-  static struct gpio_callback pin_callback_struct;
+  private:
+    uint8_t pin_;
+    bool inverted_;
+    gpio::Flags flags_;
+    const struct device * device = nullptr;
+    GPIOInterruptWrapper * wrapper;
   
 };
 

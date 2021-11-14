@@ -35,6 +35,19 @@ def set_core_data(config):
     Kconfigs["CONFIG_NEWLIB_LIBC"] = "y"
     Kconfigs["CONFIG_LIB_CPLUSPLUS"] = "y"
     Kconfigs["CONFIG_STD_CPP14"] = "y"
+    Kconfigs["CONFIG_HARDWARE_DEVICE_CS_GENERATOR"] = "y"
+    Kconfigs["CONFIG_ENTROPY_DEVICE_RANDOM_GENERATOR"] = "y"
+    Kconfigs['CONFIG_TIMER_RANDOM_GENERATOR'] = "y"
+    Kconfigs["CONFIG_REBOOT"] = "y"
+
+    Kconfigs["CONFIG_USB"] = "y"
+    Kconfigs["CONFIG_USB_DEVICE_STACK"] = "y"
+    Kconfigs["CONFIG_USB_DEVICE_PRODUCT"] = '"MINE Zephyr USB console sample"'
+    Kconfigs["CONFIG_USB_UART_CONSOLE"] = "y"
+
+    Kconfigs["CONFIG_UART_INTERRUPT_DRIVEN"] = "y"
+    Kconfigs["CONFIG_UART_LINE_CTRL"] = "y"
+    Kconfigs["CONFIG_UART_CONSOLE_ON_DEV_NAME"] = '"CDC_ACM_0"'
 
     return config
 
@@ -60,7 +73,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(CONF_BOARD): cv.string_strict,
             cv.Required(ZEPHYR_BASE): cv.string_strict,
             cv.Optional(CONF_FRAMEWORK, default={}): ZEPHYR_FRAMEWORK_SCHEMA,
-            cv.Optional(KCONFIG_KEY, default=[]): cv.Any(dict)
+            cv.Optional(KCONFIG_KEY, default={}): cv.Any(dict)
         }
     ),
     set_core_data
@@ -70,3 +83,12 @@ CONFIG_SCHEMA = cv.All(
 @coroutine_with_priority(1000)
 async def to_code(config):
     cg.add_global(cg.RawStatement("#include <zephyr.h>"))
+    cg.add_global(cg.RawStatement("#include <sys/printk.h>"))
+    cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
+    cg.add_global(cg.RawStatement("#include <sys/printk.h>"))
+    cg.add_global(cg.RawStatement("#include <sys/util.h>"))
+    cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
+    cg.add_global(cg.RawStatement("#include <drivers/uart.h>"))
+    cg.add_global(cg.RawStatement("#include <devicetree_unfixed.h>"))
+
+    cg.add_define("USE_ZEPHYR")

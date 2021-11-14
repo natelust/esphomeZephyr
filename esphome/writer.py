@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Union
+from textwrap import dedent
 
 from esphome.config import iter_components
 from esphome.const import (
@@ -394,6 +395,32 @@ def write_cpp(code_s):
         f"{code_format[1] + CPP_AUTO_GENERATE_BEGIN}\n{code_s}{CPP_AUTO_GENERATE_END}"
     )
     full_file += code_format[2]
+    if CORE.is_zephyr:
+        full_file += dedent(r"""void main(void)
+        {
+            const struct device *dev = device_get_binding(
+                             CONFIG_UART_CONSOLE_ON_DEV_NAME);
+
+            uint32_t dtr = 0;
+
+            if (usb_enable(NULL)) {
+                return;
+            }
+
+            /* Poll if the DTR flag was set */
+            while (!dtr) {
+                    uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+            }
+
+            printk("Starting\n");
+            setup();
+            while (1) {
+                printk("running loop\n");
+                k_sleep(K_MSEC(16));
+                loop();
+            }
+        }
+        """)
     write_file_if_changed(path, full_file)
 
 

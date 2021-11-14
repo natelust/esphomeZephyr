@@ -20,6 +20,11 @@
 #include "esp_efuse_table.h"
 #endif
 
+#ifdef USE_ZEPHYR
+#include <random/rand32.h>
+#include <strings.h>
+#endif
+
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
 
@@ -41,6 +46,14 @@ void get_mac_address_raw(uint8_t *mac) {
 #endif
 #ifdef USE_ESP8266
   WiFi.macAddress(mac);
+#endif
+#ifdef USE_ZEPHYR
+  mac[0] = 0;
+  mac[1] = 0;
+  mac[2] = 0;
+  mac[3] = 0;
+  mac[4] = 0;
+  mac[5] = 0;
 #endif
 }
 
@@ -71,6 +84,8 @@ uint32_t random_uint32() {
   return esp_random();
 #elif defined(USE_ESP8266)
   return os_random();
+#elif defined(USE_ZEPHYR)
+  return sys_rand32_get();
 #endif
 }
 
@@ -83,6 +98,9 @@ void fill_random(uint8_t *data, size_t len) {
   esp_fill_random(data, len);
 #elif defined(USE_ESP8266)
   int err = os_get_random(data, len);
+  assert(err == 0);
+#elif defined(USE_ZEPHYR)
+  int err = sys_csrand_get(data, len);
   assert(err == 0);
 #else
 #error "No random source for this system config"

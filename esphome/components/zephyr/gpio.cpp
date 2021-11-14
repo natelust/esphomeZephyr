@@ -1,4 +1,5 @@
 #include "gpio.h"
+#include <sys/util.h>
 
 namespace esphome {
 namespace zephyr {
@@ -8,6 +9,11 @@ struct ISRPinArg {
   bool inverted;
 };
 
+void pin_callback(const struct device *port, struct gpio_callback *cb, gpio_port_pins_t pins){
+  struct GPIOInterruptWrapper * container = CONTAINER_OF(cb, struct GPIOInterruptWrapper, pin_callback_struct);
+  container->func(container->arg);
+
+}
 
 ISRInternalGPIOPin ZephyrGPIOPin::to_isr() const {
   auto *arg = new ISRPinArg{};  // NOLINT(cppcoreguidelines-owning-memory)
@@ -16,8 +22,8 @@ ISRInternalGPIOPin ZephyrGPIOPin::to_isr() const {
   return ISRInternalGPIOPin((void *) arg);
 }
 
-void ZephyrGPIOPin::attach_interrupt(void (*func)(void *), void *arg, esphome::gpio::InterruptType type) {
-    uint8_t gpio_controller_mode = 0;
+void ZephyrGPIOPin::attach_interrupt(void (*func)(void *), void *arg, esphome::gpio::InterruptType type) const {
+    uint32_t gpio_controller_mode = 0;
     switch (type) {
         case esphome::gpio::INTERRUPT_RISING_EDGE:
             gpio_controller_mode = inverted_ ? GPIO_INT_EDGE_FALLING : GPIO_INT_EDGE_RISING;
@@ -28,25 +34,23 @@ void ZephyrGPIOPin::attach_interrupt(void (*func)(void *), void *arg, esphome::g
         case esphome::gpio::INTERRUPT_ANY_EDGE:
             gpio_controller_mode = GPIO_INT_EDGE_BOTH;
             break;
-        case esphome::gio::INTERRUPT_LOW_LEVEL:
-            gpio_controller_mode = inverted_ ? GPIO_INT_LEVEL_HIGHT : GPIO_INT_LEVEL_LOW;
+        case esphome::gpio::INTERRUPT_LOW_LEVEL:
+            gpio_controller_mode = inverted_ ? GPIO_INT_LEVEL_HIGH: GPIO_INT_LEVEL_LOW;
             break;
-        case esphome::gpio::INTERRUPT_HIGH_LOW:
+        case esphome::gpio::INTERRUPT_HIGH_LEVEL:
             gpio_controller_mode = inverted_ ? GPIO_INT_LEVEL_LOW : GPIO_INT_LEVEL_HIGH;
             break;
     }
     gpio_pin_interrupt_configure(this->device, pin_, gpio_controller_mode); // todo
-    CallBackWrapper * callback = new CallBackWrapper(func, arg);
-    if (this->callback != nullptr) {
-      detach_interrupt();
-    }
-    this->callback = callback;
-    gpio_init_callback(&(this->pin_callback_struct), callback->operator(), BIT(pin_));
-    gpio_add_callback(this->device, &(this->pin_callback_struct));
+
+    this->wrapper->func = func;
+    this->wrapper->arg = arg;
+    gpio_init_callback(&(this->wrapper->pin_callback_struct), pin_callback, BIT(pin_));
+    gpio_add_callback(this->device, &(this->wrapper->pin_callback_struct));
 }
 
 void ZephyrGPIOPin::pin_mode(gpio::Flags flags) {
-  uint8_t mode;
+  uint32_t mode;
   if (flags == gpio::FLAG_INPUT) {
     mode = GPIO_INPUT;
   } else if (flags == gpio::FLAG_OUTPUT) {
@@ -60,7 +64,8 @@ void ZephyrGPIOPin::pin_mode(gpio::Flags flags) {
   } else {
     return;
   }
-  pinMode(pin_, mode);  // NOLINT
+  gpio_pin_configure(this->device, pin_, mode);
+  //pinMode(pin_, mode);  // NOLINT
 }
 
 std::string ZephyrGPIOPin::dump_summary() const {
@@ -75,10 +80,8 @@ bool ZephyrGPIOPin::digital_read() {
 void ZephyrGPIOPin::digital_write(bool value) {
   gpio_pin_set_raw(this->device, pin_, value != inverted_ ? 1 : 0);  // NOLINT
 }
-void ZephyrGPIOPin::detach_interrupt() {
-  gpio_remove_callback(this->device, this->pin_callback_struct);
-  delete this->callback;
-  this->callback = nullptr;
+void ZephyrGPIOPin::detach_interrupt() const {
+  gpio_remove_callback(this->device, &(this->wrapper->pin_callback_struct));
 }
 
 }  // namespace zephyr

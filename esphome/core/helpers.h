@@ -14,7 +14,9 @@
 
 #define HOT __attribute__((hot))
 #define ESPDEPRECATED(msg, when) __attribute__((deprecated(msg)))
+
 #define ALWAYS_INLINE __attribute__((always_inline))
+
 #define PACKED __attribute__((packed))
 
 #define xSemaphoreWait(semaphore, wait_time) \
@@ -257,7 +259,7 @@ struct is_callable  // NOLINT
 
 template<typename T, typename... X> class TemplatableValue {
  public:
-  TemplatableValue() : type_(EMPTY) {}
+  TemplatableValue() : type_(LocalType::EMPTY) {}
 
   template<typename F, enable_if_t<!is_callable<F, X...>::value, int> = 0>
   TemplatableValue(F value) : type_(VALUE), value_(value) {}
@@ -265,7 +267,7 @@ template<typename T, typename... X> class TemplatableValue {
   template<typename F, enable_if_t<is_callable<F, X...>::value, int> = 0>
   TemplatableValue(F f) : type_(LAMBDA), f_(f) {}
 
-  bool has_value() { return this->type_ != EMPTY; }
+  bool has_value() { return this->type_ != LocalType::EMPTY; }
 
   T value(X... x) {
     if (this->type_ == LAMBDA) {
@@ -290,7 +292,7 @@ template<typename T, typename... X> class TemplatableValue {
   }
 
  protected:
-  enum {
+  enum LocalType{
     EMPTYT,
     VALUE,
     LAMBDA,

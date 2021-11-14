@@ -17,6 +17,9 @@ def run_compile():
     # get the base path to the boot dir
     boot_dir = os.path.abspath(CORE.relative_build_path(BOOT_DIR))
 
+    # get the path to the key file
+    key_file = os.path.abspath(CORE.relative_build_path(f"{CORE.name}.pem"))
+
     # get the board to build against
     board = str(CORE.data[ZEPHYR_CORE_KEY][KEY_BOARD])
 
@@ -39,7 +42,6 @@ def run_compile():
     result = run_external_process(*build_command)
 
     if result == 0:
-
         # build the boot loader
         # run the west build command
         build_command = ["west",
@@ -50,7 +52,11 @@ def run_compile():
                          "auto",
                          "-d",
                          os.path.join(boot_dir, "build"),
-                         os.path.join(boot_dir, "mcuboot")
+                         os.path.join(boot_dir, "mcuboot", "boot", "zephyr"),
+                         "--",
+                         f'-DCONFIG_BOOT_SIGNATURE_KEY_FILE="{key_file}"',
+                         f'-DBOARD_FLASH_RUNNER=blackmagicprobe',
+                         f'-DBOARD_DEBUG_RUNNER=blackmagicprobe'
                          ]
         result = run_external_process(*build_command)
 

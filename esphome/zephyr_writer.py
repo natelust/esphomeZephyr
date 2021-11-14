@@ -30,7 +30,7 @@ class ZephyrDirectoryBuilder:
         self.zephyr_base = CORE.data[ZEPHYR_CORE_KEY][ZEPHYR_BASE]
         self.proj_dir = CORE.relative_build_path(os.path.join(PROJ_DIR, CORE.name))
         self.boot_dir = CORE.relative_build_path(BOOT_DIR)
-        self.key_file = CORE.relative_build_path(f"{self.proj_name}.pem")
+        self.key_file = os.path.abspath(CORE.relative_build_path(f"{self.proj_name}.pem"))
 
     def __enter__(self) -> "ZephyrDirectoryBuilder":
         self._saved_build_path = CORE.build_path
@@ -54,10 +54,6 @@ class ZephyrDirectoryBuilder:
 
         return 0
 
-            #FILE(GLOB app_sources ../src/*.c*)
-            #FILE(GLOB app_headers ../src/*.h*)
-            #target_sources(app, PRIVATE ${{sources_SRC}})
-            #include({base_dir}/zephyr/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
     def createCmakeFile(self) -> None:
         cmakeStr = dedent(
             """cmake_minimum_required(VERSION 3.13.1)
@@ -80,13 +76,13 @@ class ZephyrDirectoryBuilder:
 
     def createProjFile(self) -> None:
         mapping = CORE.data[ZEPHYR_CORE_KEY][KCONFIG_KEY]
-        mapping["CONFIG_BOOTLOADER_MCUBOOT"] = "y"
+        #mapping["CONFIG_BOOTLOADER_MCUBOOT"] = "y"
+        #mapping['CONFIG_MCUBOOT_SIGNATURE_KEY_FILE'] = f'"{self.key_file}"'
         mapping["CONFIG_GPIO"] = "y"
         result = '\n'.join(f"{key}={value}"
                            for key, value in mapping.items())
         with open(os.path.join(self.proj_dir, "prj.conf"), "w") as f:
             f.write(result)
-
 
     def setupBootloader(self):
         # create the signing keys if one does not exist
@@ -110,7 +106,7 @@ class ZephyrDirectoryBuilder:
 
         # always copy the bootloader in case there is a new version
         shutil.copytree(
-            os.path.join(self.zephyr_base, "bootloader", "mcuboot", "boot", "zephyr"),
+            os.path.join(self.zephyr_base, "bootloader", "mcuboot"),
             os.path.join(f"{self.boot_dir}", "mcuboot"), dirs_exist_ok=True
         )
 

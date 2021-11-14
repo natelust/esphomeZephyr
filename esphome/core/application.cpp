@@ -3,6 +3,8 @@
 #include "esphome/core/version.h"
 #include "esphome/core/hal.h"
 
+#include <sys/printk.h>
+
 #ifdef USE_STATUS_LED
 #include "esphome/components/status_led/status_led.h"
 #endif
@@ -32,17 +34,24 @@ void Application::setup() {
     return a->get_actual_setup_priority() > b->get_actual_setup_priority();
   });
 
+  printk("before loop\n");
   for (uint32_t i = 0; i < this->components_.size(); i++) {
     Component *component = this->components_[i];
 
+    printk("before call\n");
     component->call();
+    
+    printk("before process add\n");
     this->scheduler.process_to_add();
+    printk("before process can\n");
     if (component->can_proceed())
       continue;
 
+    printk("before stable sort\n");
     std::stable_sort(this->components_.begin(), this->components_.begin() + i + 1,
                      [](Component *a, Component *b) { return a->get_loop_priority() > b->get_loop_priority(); });
 
+    printk("before do\n");
     do {
       uint32_t new_app_state = STATUS_LED_WARNING;
       this->scheduler.call();
