@@ -415,10 +415,10 @@ def write_cpp(code_s):
             printk("Starting\n");
             setup();
             while (1) {
-                printk("running loop\n");
-                k_sleep(K_MSEC(16));
+                //k_sleep(K_MSEC(16));
                 loop();
             }
+            printk("after loop");
         }
         """)
     write_file_if_changed(path, full_file)

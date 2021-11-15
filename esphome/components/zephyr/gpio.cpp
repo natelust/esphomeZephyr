@@ -56,16 +56,15 @@ void ZephyrGPIOPin::pin_mode(gpio::Flags flags) {
   } else if (flags == gpio::FLAG_OUTPUT) {
     mode = GPIO_OUTPUT;
   } else if (flags == (gpio::FLAG_INPUT | gpio::FLAG_PULLUP)) {
-    mode = GPIO_PULL_UP;
+    mode = GPIO_INPUT | GPIO_PULL_UP;
   } else if (flags == (gpio::FLAG_INPUT | gpio::FLAG_PULLDOWN)) {
-    mode = GPIO_PULL_DOWN;
+    mode = GPIO_INPUT | GPIO_PULL_DOWN;
   } else if (flags == (gpio::FLAG_OUTPUT | gpio::FLAG_OPEN_DRAIN)) {
-    mode = GPIO_OPEN_DRAIN;
+    mode = GPIO_OUTPUT | GPIO_OPEN_DRAIN;
   } else {
     return;
   }
   gpio_pin_configure(this->device, pin_, mode);
-  //pinMode(pin_, mode);  // NOLINT
 }
 
 std::string ZephyrGPIOPin::dump_summary() const {
