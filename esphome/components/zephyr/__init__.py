@@ -85,10 +85,7 @@ async def to_code(config):
     cg.add_global(cg.RawStatement("#include <zephyr.h>"))
     cg.add_global(cg.RawStatement("#include <sys/printk.h>"))
     cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
-    cg.add_global(cg.RawStatement("#include <sys/printk.h>"))
     cg.add_global(cg.RawStatement("#include <sys/util.h>"))
-    cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
     cg.add_global(cg.RawStatement("#include <drivers/uart.h>"))
-    cg.add_global(cg.RawStatement("#include <devicetree_unfixed.h>"))
 
     cg.add_define("USE_ZEPHYR")

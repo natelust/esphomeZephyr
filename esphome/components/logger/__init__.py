@@ -86,6 +86,11 @@ def uart_selection(value):
         return cv.one_of(*UART_SELECTION_ESP32, upper=True)(value)
     if CORE.is_esp8266:
         return cv.one_of(*UART_SELECTION_ESP8266, upper=True)(value)
+    if CORE.is_zephyr:
+        # Not fully implimented for different uart, the code is relying on
+        # zephyr default redirection. Let it stay default for now.
+        if value == "UART0":
+            return value
     raise NotImplementedError
 
 
