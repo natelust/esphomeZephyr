@@ -16,6 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 PROJ_DIR = "proj"
 BOOT_DIR = "boot"
 
+AUTO_GEN_ZEPHYR_MAIN_BEGIN = "// ========== AUTO GENERATED ZEPHYR MAIN BLOCK BEGIN ==========="
+AUTO_GEN_ZEPHYR_MAIN_END = "// ========== AUTO GENERATED ZEPHYR MAIN BLOCK END ==========="
+
 
 class ZephyrDirectoryBuilder:
     proj_name: str
@@ -46,7 +49,8 @@ class ZephyrDirectoryBuilder:
 
         try:
             self.setupBootloader()
-        except Exception:
+        except Exception as e:
+            print(e)
             return 1
 
         self.createCmakeFile()
@@ -107,10 +111,39 @@ class ZephyrDirectoryBuilder:
         # always copy the bootloader in case there is a new version
         shutil.copytree(
             os.path.join(self.zephyr_base, "bootloader", "mcuboot"),
-            os.path.join(f"{self.boot_dir}", "mcuboot"), dirs_exist_ok=True
+            os.path.join(f"{self.boot_dir}", "mcuboot"), dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns(".git")
         )
 
         boot_config_path = os.path.join(self.boot_dir, "mcuboot", "prj.conf")
         with open(boot_config_path, "a") as f:
             config = 'CONFIG_BOOT_SIGNATURE_KEY_FILE="{}.pem"'
             f.write(config.format(os.path.abspath(self.key_file)))
+
+
+def add_zephyr_main(text: str) -> str:
+    text += "\n" + AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
+    text += dedent(r"""void main(void)
+        {
+            const struct device *dev = device_get_binding(
+                             CONFIG_UART_CONSOLE_ON_DEV_NAME);
+
+            uint32_t dtr = 0;
+
+            if (usb_enable(NULL)) {
+                return;
+            }
+
+            /* Poll if the DTR flag was set */
+            while (!dtr) {
+                    uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+            }
+
+            setup();
+            while (1) {
+                loop();
+            }
+        }
+        """)
+    text += "\n" + AUTO_GEN_ZEPHYR_MAIN_END + "\n"
+    return text

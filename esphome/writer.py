@@ -23,7 +23,10 @@ from esphome.helpers import (
 )
 from esphome.storage_json import StorageJSON, storage_path
 from esphome import loader
-from .zephyr_writer import ZephyrDirectoryBuilder
+
+from .zephyr_writer import (AUTO_GEN_ZEPHYR_MAIN_BEGIN,
+                            AUTO_GEN_ZEPHYR_MAIN_END,
+                            add_zephyr_main)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -383,6 +386,11 @@ def write_cpp(code_s):
             code_format[0], CPP_INCLUDE_BEGIN, CPP_INCLUDE_END
         )
         code_format = (code_format_[0], code_format_[1], code_format[1])
+        if CORE.is_zephyr:
+            code_format_ = find_begin_end(
+                code_format[-1], AUTO_GEN_ZEPHYR_MAIN_BEGIN, AUTO_GEN_ZEPHYR_MAIN_END
+            )
+            code_format = (code_format[0], code_format[1], code_format_[0])
     else:
         code_format = CPP_BASE_FORMAT
 
@@ -396,31 +404,7 @@ def write_cpp(code_s):
     )
     full_file += code_format[2]
     if CORE.is_zephyr:
-        full_file += dedent(r"""void main(void)
-        {
-            const struct device *dev = device_get_binding(
-                             CONFIG_UART_CONSOLE_ON_DEV_NAME);
-
-            uint32_t dtr = 0;
-
-            if (usb_enable(NULL)) {
-                return;
-            }
-
-            /* Poll if the DTR flag was set */
-            while (!dtr) {
-                    uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-            }
-
-            printk("Starting\n");
-            setup();
-            while (1) {
-                //k_sleep(K_MSEC(16));
-                loop();
-            }
-            printk("after loop");
-        }
-        """)
+        full_file = add_zephyr_main(full_file)
     write_file_if_changed(path, full_file)
 
 
