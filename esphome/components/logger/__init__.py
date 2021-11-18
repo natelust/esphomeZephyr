@@ -22,6 +22,8 @@ from esphome.core import CORE, EsphomeError, Lambda, coroutine_with_priority
 from esphome.components.esp32 import get_esp32_variant
 from esphome.components.esp32.const import VARIANT_ESP32S2, VARIANT_ESP32C3
 
+from esphome.components.zephyr import add_Kconfig
+
 CODEOWNERS = ["@esphome/core"]
 logger_ns = cg.esphome_ns.namespace("logger")
 LOG_LEVELS = {
@@ -189,6 +191,11 @@ async def to_code(config):
         cg.add_build_flag("-DENABLE_I2C_DEBUG_BUFFER")
     if config.get(CONF_ESP8266_STORE_LOG_STRINGS_IN_FLASH):
         cg.add_build_flag("-DUSE_STORE_LOG_STR_IN_FLASH")
+
+    if CORE.is_zephyr:
+        #add_Kconfig("CONFIG_LOG_BACKEND_UART", "y")
+        add_Kconfig("CONFIG_LOG_PRINTK", "y")
+        add_Kconfig("CONFIG_SHELL_LOG_BACKEND", "y")
 
     # Register at end for safe mode
     await cg.register_component(log, config)

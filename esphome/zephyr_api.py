@@ -31,6 +31,7 @@ def run_compile():
     # run the west build command
     build_command = ["west",
                      "build",
+                     "-o=-j3",
                      "-b",
                      board,
                      "-p",

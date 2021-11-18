@@ -55,6 +55,7 @@ class ZephyrDirectoryBuilder:
 
         self.createCmakeFile()
         self.createProjFile()
+        self.createAppOverlay()
 
         return 0
 
@@ -87,6 +88,30 @@ class ZephyrDirectoryBuilder:
                            for key, value in mapping.items())
         with open(os.path.join(self.proj_dir, "prj.conf"), "w") as f:
             f.write(result)
+
+                    #zephyr,console = &cdc_acm_uart0;
+    def createAppOverlay(self) -> None:
+        contents = dedent("""/*
+             * Copyright (c) 2021 Nordic Semiconductor ASA
+             *
+             * SPDX-License-Identifier: Apache-2.0
+             */
+
+            / {
+                chosen {
+                    zephyr,shell-uart = &cdc_acm_uart0;
+                };
+            };
+
+            &zephyr_udc0 {
+                cdc_acm_uart0: cdc_acm_uart0 {
+                    compatible = "zephyr,cdc-acm-uart";
+                    label = "CDC_ACM_0";
+                };
+            };
+        """)
+        with open(os.path.join(self.proj_dir, "app.overlay"), "w") as f:
+            f.write(contents)
 
     def setupBootloader(self):
         # create the signing keys if one does not exist
@@ -121,22 +146,24 @@ class ZephyrDirectoryBuilder:
             f.write(config.format(os.path.abspath(self.key_file)))
 
 
+            #const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 def add_zephyr_main(text: str) -> str:
     text += "\n" + AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
     text += dedent(r"""void main(void)
         {
-            const struct device *dev = device_get_binding(
-                             CONFIG_UART_CONSOLE_ON_DEV_NAME);
+            const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
 
             uint32_t dtr = 0;
 
-            if (usb_enable(NULL)) {
+            if (!device_is_ready(dev) || usb_enable(NULL)) {
                 return;
             }
 
             /* Poll if the DTR flag was set */
             while (!dtr) {
                     uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+                    k_sleep(K_MSEC(100));
+
             }
 
             setup();
