@@ -193,9 +193,9 @@ async def to_code(config):
         cg.add_build_flag("-DUSE_STORE_LOG_STR_IN_FLASH")
 
     if CORE.is_zephyr:
-        #add_Kconfig("CONFIG_LOG_BACKEND_UART", "y")
+        add_Kconfig("CONFIG_LOG_BACKEND_UART", "y")
         add_Kconfig("CONFIG_LOG_PRINTK", "y")
-        add_Kconfig("CONFIG_SHELL_LOG_BACKEND", "y")
+        add_Kconfig("CONFIG_SHELL_LOG_BACKEND", "n")
 
     # Register at end for safe mode
     await cg.register_component(log, config)

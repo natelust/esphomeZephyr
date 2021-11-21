@@ -46,7 +46,7 @@ def set_core_data(config):
     Kconfigs["CONFIG_USB_CDC_ACM"] = "y"
     Kconfigs["CONFIG_UART_LINE_CTRL"] = "y"
     Kconfigs["CONFIG_SERIAL"] = "y"
-    Kconfigs["CONFIG_USB_UART_CONSOLE"] = "y"
+    #Kconfigs["CONFIG_USB_UART_CONSOLE"] = "y"
     Kconfigs["CONFIG_USB_REQUEST_BUFFER_SIZE"] = 2048
     Kconfigs["CONFIG_USB_CDC_ACM_RINGBUF_SIZE"] = 2048
 
@@ -62,9 +62,8 @@ def set_core_data(config):
 
     #Kconfigs['CONFIG_SHELL_MINIMAL'] = 'y'
     Kconfigs['CONFIG_SHELL_STACK_SIZE'] = 4096
-    Kconfigs['CONFIG_SHELL_BACKEND_SERIAL'] = 'y'
+    #Kconfigs['CONFIG_SHELL_BACKEND_SERIAL'] = 'y'
     Kconfigs['CONFIG_THREAD_MONITOR'] = 'y'
-    Kconfigs['CONFIG_INIT_STACKS'] = 'y'
     Kconfigs['CONFIG_THREAD_NAME'] = 'y'
     #Kconfigs['CONFIG_CBPRINTF_NANO'] = 'y'
     Kconfigs['CONFIG_SHELL_BACKEND_SERIAL_INIT_PRIORITY'] = 51
@@ -73,6 +72,11 @@ def set_core_data(config):
     Kconfigs['CONFIG_SHELL_TAB_AUTOCOMPLETION'] = "y"
     Kconfigs['CONFIG_SHELL_METAKEYS'] = "y"
     #Kconfigs['CONFIG_KERNEL_LOG_LEVEL_DBG'] = "y"
+    Kconfigs['CONFIG_LOG_STRDUP_BUF_COUNT'] = 100
+    Kconfigs['CONFIG_LOG_STRDUP_MAX_STRING'] = 100
+    Kconfigs['CONFIG_UART_CONSOLE_INIT_PRIORITY'] = 95
+    Kconfigs['CONFIG_FPU'] = 'y'
+    #Kconfigs['CONFIG_MBEDTLS_SHA1_C'] = 'n'
 
     #Kconfigs["CONFIG_UART_CONSOLE_ON_DEV_NAME"] = '"CDC_ACM_0"'
 

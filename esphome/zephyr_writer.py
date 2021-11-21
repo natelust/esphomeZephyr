@@ -65,6 +65,7 @@ class ZephyrDirectoryBuilder:
 
             find_package(Zephyr REQUIRED HINTS $ENV{{ZEPHYR_BASE}})
             project({projName})
+            set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
             include_directories(src/)
             FILE(GLOB_RECURSE sources_SRC CONFIGURE_DEPENDS src/ "*.h" "*.cpp" "*.c")
@@ -148,7 +149,7 @@ class ZephyrDirectoryBuilder:
 
             #const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 def add_zephyr_main(text: str) -> str:
-    text += "\n" + AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
+    text += AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
     text += dedent(r"""void main(void)
         {
             const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
@@ -167,10 +168,12 @@ def add_zephyr_main(text: str) -> str:
             }
 
             setup();
+            //openthread_start(openthread_get_default_context());
             while (1) {
                 loop();
             }
         }
         """)
+    # This bit is for openthread, refactor this all later
     text += "\n" + AUTO_GEN_ZEPHYR_MAIN_END + "\n"
     return text
