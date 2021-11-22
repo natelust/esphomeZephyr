@@ -29,16 +29,18 @@ def run_compile():
 
     os.environ['ZEPHYR_BASE'] = f"{base}/zephyr"
     # run the west build command
+                     #"-o=-j3",
     build_command = ["west",
                      "build",
-                     "-o=-j3",
                      "-b",
                      board,
                      "-p",
                      "auto",
                      "-d",
                      os.path.join(proj_dir, "build"),
-                     os.path.join(proj_dir, str(CORE.name))
+                     os.path.join(proj_dir, str(CORE.name)),
+                     "--",
+                     "-DCMAKE_BUILD_TYPE=Debug",
                      ]
     result = run_external_process(*build_command)
 

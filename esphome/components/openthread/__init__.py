@@ -29,7 +29,7 @@ def set_core_data(config):
     #add_Kconfig("CONFIG_OPENTHREAD_COAPS", "y")
     #add_Kconfig("CONFIG_OPENTHREAD_SRP_CLIENT", "y")
     add_Kconfig("CONFIG_OPENTHREAD_SHELL", "y")
-    #add_Kconfig("CONFIG_SHELL_STACK_SIZE", 3072)
+    add_Kconfig("CONFIG_SHELL_STACK_SIZE", 3072)
     add_Kconfig("CONFIG_SHELL_ARGC_MAX", 26)
     add_Kconfig("CONFIG_SHELL_CMD_BUFF_SIZE", 416)
     add_Kconfig("CONFIG_NET_IPV4", "n")
@@ -45,8 +45,10 @@ def set_core_data(config):
     add_Kconfig("CONFIG_NET_SHELL", "y")
     add_Kconfig("CONFIG_NET_CONFIG_NEED_IPV6", "y")
     add_Kconfig("CONFIG_NET_CONFIG_NEED_IPV4", "n")
-    add_Kconfig("CONFIG_NET_IF_UNICAST_IPV6_ADDR_COUNT", 8)
-    add_Kconfig("CONFIG_NET_IF_MCAST_IPV6_ADDR_COUNT", 10)
+    add_Kconfig("CONFIG_NET_IF_UNICAST_IPV6_ADDR_COUNT", 20)
+    add_Kconfig("CONFIG_NET_IF_MCAST_IPV6_ADDR_COUNT", 20)
+    add_Kconfig("CONFIG_OPENTHREAD_IP6_MAX_EXT_UCAST_ADDRS", 20)
+    add_Kconfig("CONFIG_OPENTHREAD_IP6_MAX_EXT_MCAST_ADDRS", 20)
 
     add_Kconfig("CONFIG_NVS", "y")
     add_Kconfig("CONFIG_SETTINGS_NVS", "y")
@@ -54,20 +56,22 @@ def set_core_data(config):
 
     add_Kconfig("CONFIG_NET_LOG", "y")
     #add_Kconfig("CONFIG_OPENTHREAD_DEBUG", "y")
-    #add_Kconfig("CONFIG_OPENTHREAD_L2_DEBUG", "y")
+    add_Kconfig("CONFIG_OPENTHREAD_L2_DEBUG", "y")
     add_Kconfig('CONFIG_NET_L2_OPENTHREAD', "y")
-    add_Kconfig("CONFIG_OPENTHREAD_LOG_LEVEL_INFO", "y")
+    #add_Kconfig("CONFIG_OPENTHREAD_LOG_LEVEL_INFO", "y")
     add_Kconfig("CONFIG_OPENTHREAD_L2_LOG_LEVEL_INF", "y")
     add_Kconfig("CONFIG_NET_CORE_LOG_LEVEL_DBG", "y")
-    #add_Kconfig("CONFIG_OPENTHREAD_L2_LOG_LEVEL_DBG", "y")
+    add_Kconfig("CONFIG_OPENTHREAD_L2_LOG_LEVEL_DBG", "y")
     #add_Kconfig("CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN", 768)
 
     add_Kconfig("CONFIG_OPENTHREAD_THREAD_STACK_SIZE", 6144)
-    add_Kconfig('CONFIG_MBEDTLS_HEAP_SIZE', 10240)
+    add_Kconfig('CONFIG_MBEDTLS_HEAP_SIZE', 20240)
     add_Kconfig("CONFIG_OPENTHREAD_DHCP6_CLIENT", "y")
     add_Kconfig("CONFIG_OPENTHREAD_DNS_CLIENT", "y")
-    add_Kconfig("CONFIG_NET_IF_LOG_LEVEL_INF", "y")
+    add_Kconfig("CONFIG_NET_IF_LOG_LEVEL_DBG", "y")
     add_Kconfig("CONFIG_NET_MGMT_EVENT_LOG_LEVEL_INF", "y")
+    add_Kconfig("CONFIG_NET_IPV6_LOG_LEVEL_DBG", "y")
+    add_Kconfig("CONFIG_NET_CONFIG_LOG_LEVEL_DBG", "y")
 
     # New 11-21-201
     #add_Kconfig("CONFIG_NET_CONFIG_INIT_TIMEOUT", 60)
@@ -78,6 +82,10 @@ def set_core_data(config):
     add_Kconfig("CONFIG_NET_BUF_TX_COUNT", 100)
     add_Kconfig("CONFIG_NET_CONTEXT_NET_PKT_POOL", "y")
     add_Kconfig("CONFIG_OPENTHREAD_SLAAC", "y")
+
+    #new 11-22-1233
+    add_Kconfig("CONFIG_NET_IPV6_MLD", "n")
+    add_Kconfig("CONFIG_NET_IPV6_NBR_CACHE", "n")
 
 def _verify_network_key(value):
     value = cv.string_strict(value)

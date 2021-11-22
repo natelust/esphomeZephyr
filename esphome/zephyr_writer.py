@@ -59,13 +59,15 @@ class ZephyrDirectoryBuilder:
 
         return 0
 
+            #set(CMAKE_BUILD_TYPE DEBUG)
+            #set(CMAKE_CXX_FLAGS_DEBUG "${{CMAKE_CXX_FLAGS_DEBUG}} -O0")
+            #set(CMAKE_C_FLAGS_DEBUG "${{CMAKE_C_FLAGS_DEBUG}} -O0")
     def createCmakeFile(self) -> None:
         cmakeStr = dedent(
             """cmake_minimum_required(VERSION 3.13.1)
 
             find_package(Zephyr REQUIRED HINTS $ENV{{ZEPHYR_BASE}})
             project({projName})
-            set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
             include_directories(src/)
             FILE(GLOB_RECURSE sources_SRC CONFIGURE_DEPENDS src/ "*.h" "*.cpp" "*.c")
