@@ -7,6 +7,8 @@ import esphome.config_validation as cv
 import esphome.codegen as cg
 
 
+AUTO_LOAD = ["network"]
+
 CONF_NETWORK_NAME = "network_name"
 CONF_NETWORK_CHANNEL = "network_channel"
 CONF_NETWORK_KEY = "network_key"
@@ -68,6 +70,7 @@ def set_core_data(config):
     add_Kconfig('CONFIG_MBEDTLS_HEAP_SIZE', 20240)
     add_Kconfig("CONFIG_OPENTHREAD_DHCP6_CLIENT", "y")
     add_Kconfig("CONFIG_OPENTHREAD_DNS_CLIENT", "y")
+    add_Kconfig("CONFIG_DNS_RESOLVER", "y")
     add_Kconfig("CONFIG_NET_IF_LOG_LEVEL_DBG", "y")
     add_Kconfig("CONFIG_NET_MGMT_EVENT_LOG_LEVEL_INF", "y")
     add_Kconfig("CONFIG_NET_IPV6_LOG_LEVEL_DBG", "y")

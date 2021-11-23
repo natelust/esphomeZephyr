@@ -39,8 +39,6 @@ def run_compile():
                      "-d",
                      os.path.join(proj_dir, "build"),
                      os.path.join(proj_dir, str(CORE.name)),
-                     "--",
-                     "-DCMAKE_BUILD_TYPE=Debug",
                      ]
     result = run_external_process(*build_command)
 

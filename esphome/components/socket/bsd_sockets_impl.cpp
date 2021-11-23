@@ -11,9 +11,6 @@
 #include <lwip/sockets.h>
 #endif
 
-#ifdef USE_ZEPHYR
-#include <include/net/socket.h>
-#endif
 
 namespace esphome {
 namespace socket {

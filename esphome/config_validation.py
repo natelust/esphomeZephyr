@@ -1441,7 +1441,7 @@ class SplitDefault(Optional):
         self._esp32_idf_default = vol.default_factory(
             esp32_idf if esp32 is vol.UNDEFINED else esp32
         )
-        self._zephyr = zephyr
+        self._zephyr_default = vol.default_factory(zephyr)
 
     @property
     def default(self):
@@ -1452,7 +1452,7 @@ class SplitDefault(Optional):
         if CORE.is_esp32 and CORE.using_esp_idf:
             return self._esp32_idf_default
         if CORE.is_zephyr:
-            return self._zephyr
+            return self._zephyr_default
         raise NotImplementedError
 
     @default.setter

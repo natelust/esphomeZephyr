@@ -127,5 +127,6 @@ async def to_code(config):
     cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
     cg.add_global(cg.RawStatement("#include <sys/util.h>"))
     cg.add_global(cg.RawStatement("#include <drivers/uart.h>"))
+    cg.add_define("ESPHOME_BOARD", "Zephyr")
 
     cg.add_define("USE_ZEPHYR")
