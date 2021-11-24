@@ -11,6 +11,14 @@
 #include <lwip/sockets.h>
 #endif
 
+#ifdef USE_ZEPHYR
+#include <net/socket.h>
+#define 	MSG_MORE   0x8000
+#endif
+/*
+#include <posix/sys/ioctl.h>
+#include <posix/unistd.h>
+*/
 
 namespace esphome {
 namespace socket {
@@ -80,7 +88,7 @@ class BSDSocketImpl : public Socket {
 
   int getpeername(struct sockaddr *addr, socklen_t *addrlen) override {
 #ifdef USE_ZEPHYR
-    return -1
+    return -1;
 #else
     return ::getpeername(fd_, addr, addrlen);
 #endif
@@ -88,7 +96,7 @@ class BSDSocketImpl : public Socket {
 
   std::string getpeername() override {
 #ifdef USE_ZEPHYR
-    return std::string("ZEPHYR_NOT_IMPLEMENTED")
+    return std::string("ZEPHYR_NOT_IMPLEMENTED");
 #else
     struct sockaddr_storage storage;
     socklen_t len = sizeof(storage);
@@ -139,13 +147,13 @@ class BSDSocketImpl : public Socket {
   }
   ssize_t read(void *buf, size_t len) override {
 #ifdef USE_ZEPHYR
-    return zsock_read(fd_, buf, len);
+    return zsock_recv(fd_, buf, len, 0);
 #else
     return ::read(fd_, buf, len);
 #endif
   }
   ssize_t readv(const struct iovec *iov, int iovcnt) override {
-#if (defined(USE_ESP32) && ESP_IDF_VERSION_MAJOR < 4) || USE_ZEPHYR
+#if (defined(USE_ESP32) && ESP_IDF_VERSION_MAJOR < 4) || defined(USE_ZEPHYR)
     // esp-idf v3 doesn't have readv, emulate it
     ssize_t ret = 0;
     for (int i = 0; i < iovcnt; i++) {
@@ -170,7 +178,7 @@ class BSDSocketImpl : public Socket {
   }
   ssize_t write(const void *buf, size_t len) override {
 #ifdef USE_ZEPHYR
-    return zsock_write(fd_, buff, len);
+    return zsock_send(fd_, buf, len, 0);
 #else
     return ::write(fd_, buf, len);
 #endif
@@ -183,7 +191,7 @@ class BSDSocketImpl : public Socket {
 #endif
   }
   ssize_t writev(const struct iovec *iov, int iovcnt) override {
-#if (defined(USE_ESP32) && ESP_IDF_VERSION_MAJOR < 4) || USE_ZEPHYR
+#if (defined(USE_ESP32) && ESP_IDF_VERSION_MAJOR < 4) || defined(USE_ZEPHYR)
     // esp-idf v3 doesn't have writev, emulate it
     ssize_t ret = 0;
     for (int i = 0; i < iovcnt; i++) {

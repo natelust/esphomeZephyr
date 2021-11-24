@@ -259,7 +259,7 @@ struct is_callable  // NOLINT
 
 template<typename T, typename... X> class TemplatableValue {
  public:
-  TemplatableValue() : type_(LocalType::EMPTY) {}
+  TemplatableValue() : type_(LocalType::EMPTYT) {}
 
   template<typename F, enable_if_t<!is_callable<F, X...>::value, int> = 0>
   TemplatableValue(F value) : type_(VALUE), value_(value) {}
@@ -267,7 +267,7 @@ template<typename T, typename... X> class TemplatableValue {
   template<typename F, enable_if_t<is_callable<F, X...>::value, int> = 0>
   TemplatableValue(F f) : type_(LAMBDA), f_(f) {}
 
-  bool has_value() { return this->type_ != LocalType::EMPTY; }
+  bool has_value() { return this->type_ != LocalType::EMPTYT; }
 
   T value(X... x) {
     if (this->type_ == LAMBDA) {
