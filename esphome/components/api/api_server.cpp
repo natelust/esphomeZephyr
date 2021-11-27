@@ -24,7 +24,12 @@ static const char *const TAG = "api";
 void APIServer::setup() {
   ESP_LOGCONFIG(TAG, "Setting up Home Assistant API server...");
   this->setup_controller();
-  socket_ = socket::socket(AF_INET, SOCK_STREAM, 0);
+#ifdef USE_IPV6
+  int family_type = AF_INET6;
+#else
+  int family_type = AF_INET;
+#endif
+  socket_ = socket::socket(family_type, SOCK_STREAM, 0);
   if (socket_ == nullptr) {
     ESP_LOGW(TAG, "Could not create socket.");
     this->mark_failed();
@@ -43,11 +48,18 @@ void APIServer::setup() {
     return;
   }
 
+#ifdef USE_IPV6
+  struct sockaddr_in6 server;
+  memset(&server, 0, sizeof(server));
+  server.sin6_family = AF_INET6;
+  server.sin6_port = htons(this->port_);
+#else
   struct sockaddr_in server;
   memset(&server, 0, sizeof(server));
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = ESPHOME_INADDR_ANY;
   server.sin_port = htons(this->port_);
+#endif
 
   err = socket_->bind((struct sockaddr *) &server, sizeof(server));
   if (err != 0) {

@@ -23,6 +23,10 @@ bool is_connected() {
     return wifi::global_wifi_component->is_connected();
 #endif
 
+#ifdef USE_OPENTHREAD
+  return true;
+#endif
+
   return false;
 }
 

@@ -90,6 +90,17 @@ def set_core_data(config):
     add_Kconfig("CONFIG_NET_IPV6_MLD", "n")
     add_Kconfig("CONFIG_NET_IPV6_NBR_CACHE", "n")
 
+    # new nov 24
+    #add_Kconfig("CONFIG_DNS_RESOLVER_ADDITIONAL_BUF_CTR", 5)
+    #add_Kconfig("CONFIG_DNS_RESOLVER_ADDITIONAL_QUERIES", 2)
+    add_Kconfig("CONFIG_MDNS_RESOLVER", "y")
+    add_Kconfig("CONFIG_LLMNR_RESOLVER", "y")
+    #add_Kconfig("CONFIG_DNS_RESOLVER_MAX_SERVERS", 2)
+    #add_Kconfig("CONFIG_DNS_SERVER_IP_ADDRESSES", "y")
+    #add_Kconfig("CONFIG_DNS_NUM_CONCUR_QUERIES", 5)
+    #add_Kconfig("CONFIG_NET_CONFIG_NEED_IPV6_ROUTER", 'y')
+    #add_Kconfig("CONFIG_NET_MGMT_EVENT", 'y')
+
 def _verify_network_key(value):
     value = cv.string_strict(value)
     for pair in value.split(':'):
@@ -119,4 +130,6 @@ CONFIG_SCHEMA = cv.All(
 
 @coroutine_with_priority(60.0)
 async def to_code(cofnig):
+    cg.add_define("USE_IPV6")
+    cg.add_define("USE_OPENTHREAD")
     cg.add_global(cg.RawStatement("#include <net/openthread.h>"))
