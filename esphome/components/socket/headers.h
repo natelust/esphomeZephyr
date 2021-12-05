@@ -113,11 +113,30 @@ struct iovec {
 
 #include <cstdint>
 #include <fcntl.h>
+
+#ifdef USE_ZEPHYR
+#include <posix/sys/ioctl.h>
+#else
 #include <sys/ioctl.h>
+#endif
+
+#ifndef USE_ZEPHYR
 #include <sys/socket.h>
+#undef LOG_LEVEL_NONE
+#endif
+
 #include <sys/types.h>
+
+#ifndef USE_ZEPHYR
 #include <sys/uio.h>
+#endif
+
+#ifdef USE_ZEPHYR
+#include <posix/unistd.h>
+#undef LOG_LEVEL_NONE
+#else
 #include <unistd.h>
+#endif
 
 #ifdef USE_ARDUINO
 // arduino-esp32 declares a global var called INADDR_NONE which is replaced

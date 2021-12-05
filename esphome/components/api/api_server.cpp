@@ -44,6 +44,21 @@ void APIServer::setup() {
   }
 
   struct sockaddr_storage server;
+  /*
+=======
+#ifdef USE_IPV6
+  struct sockaddr_in6 server;
+  memset(&server, 0, sizeof(server));
+  server.sin6_family = AF_INET6;
+  server.sin6_port = htons(this->port_);
+#else
+  struct sockaddr_in server;
+  memset(&server, 0, sizeof(server));
+  server.sin_family = AF_INET;
+  server.sin_addr.s_addr = ESPHOME_INADDR_ANY;
+  server.sin_port = htons(this->port_);
+#endif
+*/
 
   socklen_t sl = socket::set_sockaddr_any((struct sockaddr *) &server, sizeof(server), htons(this->port_));
   if (sl == 0) {

@@ -23,6 +23,13 @@ bool is_connected() {
     return wifi::global_wifi_component->is_connected();
 #endif
 
+#ifdef USE_OPENTHREAD
+  // just return true until better API can be determined. In this case
+  // openThread is used as an L2 network, so their is no direct device
+  // exposed.
+  return true;
+#endif
+
   return false;
 }
 
