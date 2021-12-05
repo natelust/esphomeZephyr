@@ -318,7 +318,7 @@ async def to_code(config):
     cg.add_build_flag("-Wno-unused-but-set-variable")
     cg.add_build_flag("-Wno-sign-compare")
 
-    if CORE.using_arduino:
+    if CORE.using_arduino or CORE.is_zephyr:
         CORE.add_job(add_arduino_global_workaround)
 
     if config[CONF_INCLUDES]:

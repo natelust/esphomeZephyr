@@ -4,6 +4,7 @@ import os
 import re
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
+
 from esphome.const import (
     CONF_COMMENT,
     CONF_ESPHOME,
@@ -25,6 +26,7 @@ from esphome.util import OrderedDict
 if TYPE_CHECKING:
     from ..cpp_generator import MockObj, MockObjClass, Statement
     from ..types import ConfigType
+    from ..components.zephyr import ZephyrManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -578,6 +580,18 @@ class EsphomeCore:
     @property
     def is_esp32(self):
         return self.target_platform == "esp32"
+
+    @property
+    def is_zephyr(self):
+        return self.target_platform == "zephyr"
+
+    @property
+    def zephyr_manager(self) -> Optional["ZephyrManager"]:
+        from esphome.components.zephyr.const import ZEPHYR_CORE_KEY
+        if self.is_zephyr:
+            return self.data[ZEPHYR_CORE_KEY]
+        else:
+            return None
 
     @property
     def target_framework(self):

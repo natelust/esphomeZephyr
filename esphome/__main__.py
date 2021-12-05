@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from shutil import which
 
 from esphome import const, writer, yaml_util
 import esphome.codegen as cg
@@ -29,6 +30,7 @@ from esphome.util import (
     get_serial_ports,
 )
 from esphome.log import color, setup_log, Fore
+from esphome.zephyr_writer import ZephyrDirectoryBuilder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,22 +171,33 @@ def generate_cpp_contents(config):
 
 
 def write_cpp_file():
-    writer.write_platformio_project()
-
-    code_s = indent(CORE.cpp_main_section)
-    writer.write_cpp(code_s)
-    return 0
+    if CORE.target_platform == "zephyr":
+        with ZephyrDirectoryBuilder() as builder:
+            result = builder.run()
+            if result == 0:
+                code_s = indent(CORE.cpp_main_section)
+                writer.write_cpp(code_s)
+        return result
+    else:
+        writer.write_platformio_project()
+        code_s = indent(CORE.cpp_main_section)
+        writer.write_cpp(code_s)
+        return 0
 
 
 def compile_program(args, config):
     from esphome import platformio_api
+    from esphome import zephyr_api
 
     _LOGGER.info("Compiling app...")
-    rc = platformio_api.run_compile(config, CORE.verbose)
-    if rc != 0:
-        return rc
-    idedata = platformio_api.get_idedata(config)
-    return 0 if idedata is not None else 1
+    if CORE.target_platform == "zephyr":
+        return zephyr_api.run_compile()
+    else:
+        rc = platformio_api.run_compile(config, CORE.verbose)
+        if rc != 0:
+            return rc
+        idedata = platformio_api.get_idedata(config)
+        return 0 if idedata is not None else 1
 
 
 def upload_using_esptool(config, port):
@@ -252,6 +265,18 @@ def upload_using_esptool(config, port):
 
 
 def upload_program(config, args, host):
+    if CORE.is_zephyr:
+        print("Previous prompt did nothing, set yaml string for serial")
+        if which("mcumgr") is not None:
+            while True:
+                network_flash = input("Flash over the network? (y/n)")
+                if network_flash in ("y", "n"):
+                    network_flash = network_flash == "y"
+                    break
+        else:
+            network_flash = False
+        from esphome.zephyr_api import run_upload
+        return run_upload(config, args, host, net_flash=network_flash)
     # if upload is to a serial port use platformio, otherwise assume ota
     if get_port_type(host) == "SERIAL":
         return upload_using_esptool(config, host)
