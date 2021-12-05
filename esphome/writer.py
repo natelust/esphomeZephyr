@@ -2,7 +2,8 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Union
+from typing import Dict, List, Union
+from textwrap import dedent
 
 from esphome.config import iter_components
 from esphome.const import (
@@ -22,6 +23,10 @@ from esphome.helpers import (
 )
 from esphome.storage_json import StorageJSON, storage_path
 from esphome import loader
+
+from .zephyr_writer import (AUTO_GEN_ZEPHYR_MAIN_BEGIN,
+                            AUTO_GEN_ZEPHYR_MAIN_END,
+                            add_zephyr_main)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -323,6 +328,11 @@ def write_cpp(code_s):
             code_format[0], CPP_INCLUDE_BEGIN, CPP_INCLUDE_END
         )
         code_format = (code_format_[0], code_format_[1], code_format[1])
+        if CORE.is_zephyr:
+            code_format_ = find_begin_end(
+                code_format[-1], AUTO_GEN_ZEPHYR_MAIN_BEGIN, AUTO_GEN_ZEPHYR_MAIN_END
+            )
+            code_format = (code_format[0], code_format[1], code_format_[0])
     else:
         code_format = CPP_BASE_FORMAT
 
@@ -335,6 +345,8 @@ def write_cpp(code_s):
         f"{code_format[1] + CPP_AUTO_GENERATE_BEGIN}\n{code_s}{CPP_AUTO_GENERATE_END}"
     )
     full_file += code_format[2]
+    if CORE.is_zephyr:
+        full_file = add_zephyr_main(full_file)
     write_file_if_changed(path, full_file)
 
 

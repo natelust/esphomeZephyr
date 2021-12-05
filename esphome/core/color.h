@@ -3,6 +3,12 @@
 #include "component.h"
 #include "helpers.h"
 
+// zepher has its own AWAYS_INLINE that gets pulled in and needs to be
+// overridden here
+#ifdef USE_ZEPHYR
+#define ALWAYS_INLINE __attribute__((always_inline))
+#endif
+
 namespace esphome {
 
 inline static uint8_t esp_scale8(uint8_t i, uint8_t scale) { return (uint16_t(i) * (1 + uint16_t(scale))) / 256; }
@@ -31,7 +37,7 @@ struct Color {
     uint32_t raw_32;
   };
 
-  inline Color() ALWAYS_INLINE : r(0), g(0), b(0), w(0) {}  // NOLINT
+  inline ALWAYS_INLINE Color() : r(0), g(0), b(0), w(0) {}  // NOLINT
   inline Color(uint8_t red, uint8_t green, uint8_t blue) ALWAYS_INLINE : r(red), g(green), b(blue), w(0) {}
 
   inline Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t white) ALWAYS_INLINE : r(red),

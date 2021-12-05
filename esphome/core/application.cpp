@@ -36,6 +36,7 @@ void Application::setup() {
     Component *component = this->components_[i];
 
     component->call();
+    
     this->scheduler.process_to_add();
     this->feed_wdt();
     if (component->can_proceed())

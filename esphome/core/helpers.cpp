@@ -34,6 +34,11 @@
 #include "esp_efuse_table.h"
 #endif
 
+#ifdef USE_ZEPHYR
+#include <random/rand32.h>
+#include <strings.h>
+#endif
+
 namespace esphome {
 
 // STL backports
@@ -104,10 +109,13 @@ uint32_t random_uint32() {
     result |= rosc_hw->randombit;
   }
   return result;
+#elif defined(USE_ZEPHYR)
+  return sys_rand32_get();
 #else
 #error "No random source available for this configuration."
 #endif
 }
+
 float random_float() { return static_cast<float>(random_uint32()) / static_cast<float>(UINT32_MAX); }
 bool random_bytes(uint8_t *data, size_t len) {
 #ifdef USE_ESP32
@@ -125,6 +133,9 @@ bool random_bytes(uint8_t *data, size_t len) {
     *data++ = result;
   }
   return true;
+#elif defined(USE_ZEPHYR)
+  int err = sys_csrand_get(data, len);
+  assert(err == 0);
 #else
 #error "No random source available for this configuration."
 #endif
@@ -437,6 +448,14 @@ void get_mac_address_raw(uint8_t *mac) {  // NOLINT(readability-non-const-parame
   wifi_get_macaddr(STATION_IF, mac);
 #elif defined(USE_RP2040) && defined(USE_WIFI)
   WiFi.macAddress(mac);
+#endif
+#ifdef USE_ZEPHYR
+  mac[0] = 0;
+  mac[1] = 0;
+  mac[2] = 0;
+  mac[3] = 0;
+  mac[4] = 0;
+  mac[5] = 0;
 #endif
 }
 std::string get_mac_address() {
