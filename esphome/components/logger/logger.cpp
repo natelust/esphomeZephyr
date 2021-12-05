@@ -8,6 +8,11 @@
 #if defined(USE_ESP32_FRAMEWORK_ARDUINO) || defined(USE_ESP_IDF)
 #include <esp_log.h>
 #endif
+
+#ifdef USE_ZEPHYR
+#include <sys/printk.h>
+#endif
+
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
 
@@ -119,6 +124,10 @@ void HOT Logger::log_message_(int level, const char *tag, int offset) {
     uart_write_bytes(uart_num_, msg, strlen(msg));
     uart_write_bytes(uart_num_, "\n", 1);
 #endif
+#ifdef USE_ZEPHYR
+  printk(msg);
+  printk("\n");
+#endif
   }
 
 #ifdef USE_ESP32
@@ -229,6 +238,10 @@ const char *const UART_SELECTIONS[] = {"UART0", "UART1", "UART2"};
 #ifdef USE_ESP8266
 const char *const UART_SELECTIONS[] = {"UART0", "UART1", "UART0_SWAP"};
 #endif
+#ifdef USE_ZEPHYR
+const char *const UART_SELECTIONS[] = {"UART0"};
+#endif
+
 void Logger::dump_config() {
   ESP_LOGCONFIG(TAG, "Logger:");
   ESP_LOGCONFIG(TAG, "  Level: %s", LOG_LEVELS[ESPHOME_LOG_LEVEL]);

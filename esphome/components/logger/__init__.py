@@ -22,6 +22,7 @@ from esphome.core import CORE, EsphomeError, Lambda, coroutine_with_priority
 from esphome.components.esp32 import get_esp32_variant
 from esphome.components.esp32.const import VARIANT_ESP32S2, VARIANT_ESP32C3
 
+
 CODEOWNERS = ["@esphome/core"]
 logger_ns = cg.esphome_ns.namespace("logger")
 LOG_LEVELS = {
@@ -86,6 +87,11 @@ def uart_selection(value):
         return cv.one_of(*UART_SELECTION_ESP32, upper=True)(value)
     if CORE.is_esp8266:
         return cv.one_of(*UART_SELECTION_ESP8266, upper=True)(value)
+    if CORE.is_zephyr:
+        # Not fully implimented for different uart, the code is relying on
+        # zephyr default redirection. Let it stay default for now.
+        if value == "UART0":
+            return value
     raise NotImplementedError
 
 
@@ -184,6 +190,13 @@ async def to_code(config):
         cg.add_build_flag("-DENABLE_I2C_DEBUG_BUFFER")
     if config.get(CONF_ESP8266_STORE_LOG_STRINGS_IN_FLASH):
         cg.add_build_flag("-DUSE_STORE_LOG_STR_IN_FLASH")
+
+    if CORE.zephyr_manager is not None:
+        CORE.zephyr_manager.add_Kconfig_vec((
+            ("CONFIG_LOG_BACKEND_UART", "y"),
+            ("CONFIG_LOG_PRINTK", "y"),
+            ("CONFIG_SHELL_LOG_BACKEND", "y"),
+        ))
 
     # Register at end for safe mode
     await cg.register_component(log, config)
