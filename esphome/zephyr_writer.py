@@ -8,7 +8,9 @@ from textwrap import dedent
 from .core import CORE
 from .components.zephyr.const import ZEPHYR_BASE, ZEPHYR_CORE_KEY, KCONFIG_KEY
 from esphome.helpers import mkdir_p
+from esphome.components.zephyr import ZephyrManager
 
+from typing import cast
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +32,8 @@ class ZephyrDirectoryBuilder:
     def __init__(self):
         assert CORE.name is not None
         self.proj_name = CORE.name
-        self.zephyr_base = CORE.zephyr_manager.zephyr_base
+        self.manager = cast(ZephyrManager, CORE.zephyr_manager)
+        self.zephyr_base = self.manager.zephyr_base
         self.proj_dir = CORE.relative_build_path(os.path.join(PROJ_DIR, CORE.name))
         self.boot_dir = CORE.relative_build_path(BOOT_DIR)
         self.key_file = os.path.abspath(CORE.relative_build_path(f"{self.proj_name}.pem"))
@@ -83,20 +86,19 @@ class ZephyrDirectoryBuilder:
             )
 
     def createProjFile(self) -> None:
-        manager = CORE.zephyr_manager
-        assert manager is not None
-        manager.add_Kconfig_vec((
+        self.manager.add_Kconfig_vec((
             ("CONFIG_BOOTLOADER_MCUBOOT", "y"),
             ('CONFIG_MCUBOOT_SIGNATURE_KEY_FILE', f'"{self.key_file}"'),
         ))
         result = '\n'.join(f"{key}={value}"
-                           for key, value in manager.Kconfigs.items())
+                           for key, value in self.manager.Kconfigs.items())
         with open(os.path.join(self.proj_dir, "prj.conf"), "w") as f:
             f.write(result)
 
                     #zephyr,console = &cdc_acm_uart0;
     def createAppOverlay(self) -> None:
-        contents = dedent("""/*
+        contents = dedent("""
+            /*
              * Copyright (c) 2021 Nordic Semiconductor ASA
              *
              * SPDX-License-Identifier: Apache-2.0
@@ -115,6 +117,8 @@ class ZephyrDirectoryBuilder:
                 };
             };
         """)
+        contents = '\n'.join((contents, *self.manager.device_overlay_list))
+
         with open(os.path.join(self.proj_dir, "app.overlay"), "w") as f:
             f.write(contents)
 

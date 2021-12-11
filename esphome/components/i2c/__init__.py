@@ -19,6 +19,7 @@ CODEOWNERS = ["@esphome/core"]
 i2c_ns = cg.esphome_ns.namespace("i2c")
 I2CBus = i2c_ns.class_("I2CBus")
 ArduinoI2CBus = i2c_ns.class_("ArduinoI2CBus", I2CBus, cg.Component)
+ZephyrI2CBus = i2c_ns.class_("ZephyrI2CBus", I2CBus, cg.Component)
 IDFI2CBus = i2c_ns.class_("IDFI2CBus", I2CBus, cg.Component)
 I2CDevice = i2c_ns.class_("I2CDevice")
 
@@ -33,6 +34,9 @@ def _bus_declare_type(value):
         return cv.declare_id(ArduinoI2CBus)(value)
     if CORE.using_esp_idf:
         return cv.declare_id(IDFI2CBus)(value)
+    if CORE.is_zephyr:
+        return cv.declare_id(ZephyrI2CBus)(value)
+
     raise NotImplementedError
 
 
@@ -67,17 +71,23 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
-    cg.add(var.set_sda_pin(config[CONF_SDA]))
-    if CONF_SDA_PULLUP_ENABLED in config:
-        cg.add(var.set_sda_pullup_enabled(config[CONF_SDA_PULLUP_ENABLED]))
-    cg.add(var.set_scl_pin(config[CONF_SCL]))
-    if CONF_SCL_PULLUP_ENABLED in config:
-        cg.add(var.set_scl_pullup_enabled(config[CONF_SCL_PULLUP_ENABLED]))
+    if not CORE.is_zephyr:
+        cg.add(var.set_sda_pin(config[CONF_SDA]))
+        if CONF_SDA_PULLUP_ENABLED in config:
+            cg.add(var.set_sda_pullup_enabled(config[CONF_SDA_PULLUP_ENABLED]))
+        cg.add(var.set_scl_pin(config[CONF_SCL]))
+        if CONF_SCL_PULLUP_ENABLED in config:
+            cg.add(var.set_scl_pullup_enabled(config[CONF_SCL_PULLUP_ENABLED]))
 
     cg.add(var.set_frequency(int(config[CONF_FREQUENCY])))
     cg.add(var.set_scan(config[CONF_SCAN]))
     if CORE.using_arduino:
         cg.add_library("Wire", None)
+    if CORE.is_zephyr:
+        name, sda, scl = CORE.zephyr_manager.handle_i2c(**config)
+        cg.add(var.set_sda_pin(sda))
+        cg.add(var.set_scl_pin(scl))
+        cg.add(var.set_device(cg.RawExpression(f'DT_LABEL(DT_NODELABEL({name}))')))
 
 
 def i2c_device_schema(default_address):
