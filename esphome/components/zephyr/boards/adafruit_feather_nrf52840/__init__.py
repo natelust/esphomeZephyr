@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from ..baseBoardValidator import BaseZephyrBoard
 from .. import registry
 
@@ -53,6 +55,14 @@ pinMapping = {
 @registry.register("adafruit_feather_nrf52840")
 class AdafruitFeatherNrf52840(BaseZephyrBoard):
     @classmethod
+    def SDA_PIN(cls) -> str:
+        return "D22"
+
+    @classmethod
+    def SCL_PIN(cls) -> str:
+        return "D23"
+
+    @classmethod
     def validate_gpio_pin(cls, value):
         # do nothing for now, fix this later
         return value
@@ -73,3 +83,10 @@ class AdafruitFeatherNrf52840(BaseZephyrBoard):
     @classmethod
     def can_openthread(cls) -> bool:
         return True
+
+    @classmethod
+    def i2c_arg_validator(cls, **kwargs):
+        if kwargs['sda'] == cls.SDA_PIN() and kwargs['scl'] == cls.SCL_PIN():
+            if kwargs['frequency'] != 100000.0 and kwargs['frequency'] != 400000:
+                raise ValueError(f"{cls} only supports 100kHz and 400kHz for "
+                                 "the built in i2c controller")

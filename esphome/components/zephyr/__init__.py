@@ -34,6 +34,7 @@ class ZephyrManager:
         self._zephyr_base = zephyr_base
         self.Kconfigs = Kconfigs
         self.flash_args = flash_args
+        self.device_overlay_list = []
 
     @property
     def board(self) -> BaseZephyrBoard:
@@ -51,6 +52,10 @@ class ZephyrManager:
     def add_Kconfig_vec(self, configs: Iterable[Tuple[str, Any]]) -> None:
         for key, value in configs:
             self.add_Kconfig(key, value)
+
+    def handle_i2c(self, **kwargs) -> Tuple[str, str, str]:
+        self.add_Kconfig_vec((("CONFIG_I2C", "y"), ("CONFIG_I2C_SHELL", "n")))
+        return self.board.handle_i2c(**kwargs)
 
 
 def set_core_data(config):
