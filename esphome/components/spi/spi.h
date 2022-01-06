@@ -4,14 +4,6 @@
 #include "esphome/core/hal.h"
 #include <vector>
 
-#ifdef USE_ARDUINO
-#define USE_SPI_ARDUINO_BACKEND
-#endif
-
-#ifdef USE_SPI_ARDUINO_BACKEND
-#include <SPI.h>
-#endif
-
 namespace esphome {
 namespace spi {
 
@@ -69,37 +61,23 @@ enum SPIDataRate : uint32_t {
   DATA_RATE_40MHZ = 40000000,
 };
 
-class SPIComponent : public Component {
+class SPIComponent {
  public:
-  void set_clk(GPIOPin *clk) { clk_ = clk; }
-  void set_miso(GPIOPin *miso) { miso_ = miso; }
-  void set_mosi(GPIOPin *mosi) { mosi_ = mosi; }
+  void set_clk(GPIOPin *clk) {}
+  void set_miso(GPIOPin *miso) {}
+  void set_mosi(GPIOPin *mosi) {}
 
-  void setup() override;
+  template<class... Types>
+  uint8_t read_byte() {}
 
-  void dump_config() override;
+  template<class... Types>
+  void read_array(uint8_t *data, size_t length) {}
 
-  template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE> uint8_t read_byte() {
-#ifdef USE_SPI_ARDUINO_BACKEND
-    if (this->hw_spi_ != nullptr) {
-      return this->hw_spi_->transfer(0x00);
-    }
-#endif  // USE_SPI_ARDUINO_BACKEND
-    return this->transfer_<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE, true, false>(0x00);
-  }
+  template<class... Types>
+  void write_byte(uint8_t data) {}
 
-  template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
-  void read_array(uint8_t *data, size_t length) {
-#ifdef USE_SPI_ARDUINO_BACKEND
-    if (this->hw_spi_ != nullptr) {
-      this->hw_spi_->transfer(data, length);
-      return;
-    }
-#endif  // USE_SPI_ARDUINO_BACKEND
-    for (size_t i = 0; i < length; i++) {
-      data[i] = this->read_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>();
-    }
-  }
+  template<class... Types>
+  void write_byte16(const uint16_t data) {}
 
   template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
   void write_byte(uint8_t data) {
@@ -129,9 +107,8 @@ class SPIComponent : public Component {
     }
 #endif  // USE_SPI_ARDUINO_BACKEND
 
-    this->write_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>(data >> 8);
-    this->write_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>(data);
-  }
+  template<class... Types>
+  uint8_t transfer_byte(uint8_t data) {}
 
   template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
   void write_array16(const uint16_t *data, size_t length) {
@@ -333,5 +310,5 @@ class SPIDevice {
   GPIOPin *cs_{nullptr};
 };
 
-}  // namespace spi
-}  // namespace esphome
+} // namespace spi
+} // namespace esphome
