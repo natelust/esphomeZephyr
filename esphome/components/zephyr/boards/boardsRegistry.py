@@ -11,7 +11,7 @@ class _BoardsRegistry(UserDict):
         def wrapped_registrer(validator: Type[BaseZephyrBoard]):
             if name in self:
                 raise KeyError(f"Board {name} is already registered")
-            self[name] = validator
+            self[name] = validator()
         return wrapped_registrer
 
 

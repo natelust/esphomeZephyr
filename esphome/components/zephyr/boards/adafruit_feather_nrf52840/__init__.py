@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Mapping
 
 from ..baseBoardValidator import BaseZephyrBoard
 from .. import registry
@@ -54,39 +54,53 @@ pinMapping = {
 
 @registry.register("adafruit_feather_nrf52840")
 class AdafruitFeatherNrf52840(BaseZephyrBoard):
-    @classmethod
-    def SDA_PIN(cls) -> str:
+    def SDA_PIN(self) -> str:
         return "D22"
 
-    @classmethod
-    def SCL_PIN(cls) -> str:
+    def SCL_PIN(self) -> str:
         return "D23"
 
-    @classmethod
-    def validate_gpio_pin(cls, value):
+    def validate_gpio_pin(self, value):
         # do nothing for now, fix this later
         return value
 
-    @classmethod
-    def validate_supports(cls, value):
+    def validate_supports(self, value):
         # do nothing for now, fix this later
         return value
 
-    @classmethod
-    def get_device_and_pin(cls, pin):
+    def get_device_and_pin(self, pin):
         value = pinMapping.get(pin)
         if value is None:
             raise NotImplementedError(f"Cannot handle pin specifier {pin}, "
                                       f"must be one of {pinMapping.keys()}")
         return value
 
-    @classmethod
-    def can_openthread(cls) -> bool:
+    def can_openthread(self) -> bool:
         return True
 
-    @classmethod
-    def i2c_arg_validator(cls, **kwargs):
-        if kwargs['sda'] == cls.SDA_PIN() and kwargs['scl'] == cls.SCL_PIN():
+    def i2c_arg_validator(self, **kwargs):
+        if kwargs['sda'] == self.SDA_PIN() and kwargs['scl'] == self.SCL_PIN():
             if kwargs['frequency'] != 100000.0 and kwargs['frequency'] != 400000:
-                raise ValueError(f"{cls} only supports 100kHz and 400kHz for "
+                raise ValueError(f"{type(self)} only supports 100kHz and 400kHz for "
                                  "the built in i2c controller")
+
+    def spi_device(self) -> str:
+        return "spi1"
+
+    def spi_arg_validator(self, **kwargs):
+        return
+
+    def spi_pins(self, clk=None, mosi=None, miso=None) -> Mapping[str, str]:
+        if clk is None:
+            clk = "D26"
+        if mosi is None:
+            mosi = "D25"
+        if miso is None:
+            miso = "D24"
+        result = {}
+        for name, pointer in (("clk", clk), ("mosi", mosi), ("miso", miso)):
+            controller, pin = self.get_device_and_pin(pointer)
+            if controller == GPIO_1:
+                pin += 32
+            result[name] = pin
+        return result
