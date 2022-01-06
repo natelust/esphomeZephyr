@@ -1,4 +1,4 @@
-from typing import MutableMapping, Any, Union, Iterable, Tuple
+from typing import MutableMapping, Any, Union, Iterable, Tuple, Mapping
 from esphome.const import (
     CONF_BOARD,
     CONF_FRAMEWORK,
@@ -56,6 +56,10 @@ class ZephyrManager:
     def handle_i2c(self, **kwargs) -> Tuple[str, str, str]:
         self.add_Kconfig_vec((("CONFIG_I2C", "y"), ("CONFIG_I2C_SHELL", "n")))
         return self.board.handle_i2c(**kwargs)
+
+    def handle_spi(self, **kwargs) -> Mapping[str, str]:
+        self.add_Kconfig("CONFIG_SPI", "y")
+        return self.board.handle_spi(**kwargs)
 
 
 def set_core_data(config):
