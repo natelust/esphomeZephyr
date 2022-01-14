@@ -3,6 +3,8 @@ from typing import Tuple, Mapping
 from ..baseBoardValidator import BaseZephyrBoard
 from .. import registry
 
+import esphome.config_validation as cv
+
 GPIO_0 = "gpio0"
 GPIO_1 = "gpio1"
 
@@ -51,9 +53,31 @@ pinMapping = {
     "D33": (GPIO_0, 9)  # NRF1 (bottom)
 }
 
+analogMapping: Mapping[str, int] = {
+    "A0": 0,
+    "A1": 1,
+    "A2": 2,
+    "A3": 3,
+    "A4": 4,
+    "A5": 5,
+    "A6": 6,
+    "A7": 7,
+    "D14": 0,
+    "D15": 1,
+    "D16": 2,
+    "D17": 3,
+    "D18": 4,
+    "D19": 5,
+    "D20": 6,
+    "D21": 7,
+}
+
 
 @registry.register("adafruit_feather_nrf52840")
 class AdafruitFeatherNrf52840(BaseZephyrBoard):
+    def __str__(self):
+        return "adafruit_feather_nrf52840"
+
     def SDA_PIN(self) -> str:
         return "D22"
 
@@ -104,3 +128,31 @@ class AdafruitFeatherNrf52840(BaseZephyrBoard):
                 pin += 32
             result[name] = pin
         return result
+
+    def get_analog_channel(self, pin) -> int:
+        return analogMapping[pin]
+
+    def adc_device(self) -> str:
+        return "adc"
+
+    def validate_adc_pin(self, value):
+        in_pin = value
+        if in_pin not in  ("A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7",
+                           "D14", "D15", "D16", "D17", "D18", "D19", "D20",
+                           "D21"):
+            raise cv.Invalid(f"{value} cannot be used as ADC on {self}")
+        pin = self.get_analog_channel(in_pin)
+        return pin
+
+    def adc_arg_validator(self, **kwargs) -> None:
+        #if kwargs['gain'].enum_value not in ("ADC_GAIN_1_3", "ADC_GAIN_2_3",
+                                             #"ADC_GAIN_1"):
+            #raise cv.Invalid(f"{self} does not support gain {kwargs['gain']}")
+        if kwargs['ref'].enum_value not in ("ADC_REF_INTERNAL",
+                                            "ADC_REF_VDD_1_2",
+                                            "ADC_REF_VDD_1_3",
+                                            "ADC_REF_VDD_1_4",
+                                            "ADC_REF_EXTERNAL0",
+                                            "ADC_REF_EXTERNAL1"):
+            raise cv.Invalid(f"{self} does not support reference "
+                             f"{kwargs['ref']}")

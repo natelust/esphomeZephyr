@@ -61,6 +61,10 @@ class ZephyrManager:
         self.add_Kconfig("CONFIG_SPI", "y")
         return self.board.handle_spi(**kwargs)
 
+    def handle_adc(self, **kwargs) -> Tuple[str, str]:
+        self.add_Kconfig("CONFIG_ADC", "y")
+        return self.board.handle_adc(**kwargs)
+
 
 def set_core_data(config):
     CORE.data[ZEPHYR_CORE_KEY] = {}

@@ -14,6 +14,10 @@ class BaseZephyrBoard(ABC):
         raise NotImplementedError("Not implemented on the base class")
 
     @abstractmethod
+    def validate_adc_pin(self, value):
+        raise NotImplementedError("Not implemented on the base class")
+
+    @abstractmethod
     def get_device_and_pin(self, pin):
         raise NotImplementedError("Not implemented on the base class")
 
@@ -113,3 +117,20 @@ class BaseZephyrBoard(ABC):
         result = dict(pins.items())
         result['device'] = self.spi_device()
         return result
+
+    @abstractmethod
+    def adc_arg_validator(self, **kwargs) -> None:
+        raise NotImplementedError("Not implemented on the base class")
+
+    @abstractmethod
+    def adc_device(self) -> str:
+        raise NotImplementedError("Not implemented on the base class")
+
+    @abstractmethod
+    def get_analog_channel(self, pin) -> int:
+        raise NotImplementedError("Not implemented on the base class")
+
+    def handle_adc(self, **kwargs) -> Tuple[str, int]:
+        self.adc_arg_validator(**kwargs)
+        pin = self.get_analog_channel(kwargs['pin'])
+        return self.adc_device(), pin

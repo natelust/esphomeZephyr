@@ -39,10 +39,9 @@ static const int ADC_HALF = (1 << SOC_ADC_RTC_MAX_BITWIDTH) >> 1;  // 2048 (12 b
 #ifdef USE_RP2040
 extern "C"
 #endif
-    void
-    ADCSensor::setup() {
+void ADCSensor::setup() {
   ESP_LOGCONFIG(TAG, "Setting up ADC '%s'...", this->get_name().c_str());
-#if !defined(USE_ADC_SENSOR_VCC) && !defined(USE_RP2040)
+#if !defined(USE_ADC_SENSOR_VCC) && !defined(USE_RP2040) && !defined(USE_ZEPHYR)
   pin_->setup();
 #endif
 
@@ -79,8 +78,29 @@ extern "C"
     initialized = true;
   }
 #endif
-
-  ESP_LOGCONFIG(TAG, "ADC '%s' setup finished!", this->get_name().c_str());
+#ifdef USE_ZEPHYR
+  config_ = {
+    .gain = gain_,
+    .reference = ref_,
+    .acquisition_time = ADC_ACQ_TIME_DEFAULT,
+    .channel_id = pin_,
+    .differential = 0,
+    .input_positive = pin_
+  };
+    //.input_positive = pin_+1,
+  if (dev_ == nullptr) {
+    LOG_SENSOR("", "ADC Sensor device not initialized", this);
+    this->mark_failed();
+    return;
+  }
+  int ret = adc_channel_setup(dev_, &config_);
+  if (ret != 0) {
+    LOG_SENSOR("", "ADC Sensor channel initialization failed", this);
+    this->mark_failed();
+    return;
+  }
+#endif
+ESP_LOGCONFIG(TAG, "ADC '%s' setup finished!", this->get_name().c_str());
 }
 
 void ADCSensor::dump_config() {
@@ -220,6 +240,57 @@ float ADCSensor::sample() {
     return raw;
   }
   return raw * 3.3f / 4096.0f;
+}
+
+#ifdef USE_ZEPHYR
+float ADCSensor::sample() {
+  ESP_LOGI(TAG, "measuring volage");
+  uint16_t buffer[1] = {0};
+  const struct adc_sequence sequence = {
+    .channels = BIT(pin_),
+    .buffer = buffer,
+    .buffer_size = sizeof(buffer),
+    .resolution = resolution_,
+    .calibrate = 0
+  };
+  int result = adc_read(dev_, &sequence);
+  uint16_t reference;
+  if (ref_ == adc_reference::ADC_REF_INTERNAL) {
+    reference = adc_ref_internal(dev_);
+  } else {
+    reference = this->ref_mvolt_;
+  }
+  int32_t new_buffer[1] = {(int32_t) buffer[0]};
+  result = adc_raw_to_millivolts((int32_t)reference, gain_, resolution_, new_buffer);
+  if (result != 0) {
+    ESP_LOGE(TAG, "ADC measurement failed");
+    return 0;
+  } else {
+    float voltage = ((float) new_buffer[0]) / 1000;
+    return voltage;
+  }
+}
+#endif
+
+#ifdef USE_ZEPHYR
+void ADCSensor::set_ref_voltage(float ref_volts) {
+  switch (ref_) {
+    case ADC_REF_VDD_1_4:
+      ref_mvolt_ = ref_volts*1000/4.;
+      break;
+    case ADC_REF_VDD_1_3:
+      ref_mvolt_ = ref_volts*1000/3.;
+      break;
+    case ADC_REF_VDD_1_2:
+      ref_mvolt_ = ref_volts*1000/2.;
+      break;
+    case ADC_REF_EXTERNAL0:
+    case ADC_REF_EXTERNAL1:
+    case ADC_REF_VDD_1:
+      ref_mvolt_ = ref_volts*1000;
+      break;
+  }
+>>>>>>> 9d77b743 (Add support for Adc component)
 }
 #endif
 

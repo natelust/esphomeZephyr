@@ -6,6 +6,10 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/voltage_sampler/voltage_sampler.h"
 
+//#ifdef USE_ZEPHYR
+#include <drivers/adc.h>
+//#endif
+
 #ifdef USE_ESP32
 #include "driver/adc.h"
 #include <esp_adc_cal.h>
@@ -30,8 +34,17 @@ class ADCSensor : public sensor::Sensor, public PollingComponent, public voltage
   void dump_config() override;
   /// `HARDWARE_LATE` setup priority.
   float get_setup_priority() const override;
+  #ifndef USE_ZEPHYR
   void set_pin(InternalGPIOPin *pin) { this->pin_ = pin; }
   void set_output_raw(bool output_raw) { output_raw_ = output_raw; }
+  #else
+  void set_pin(int pin) {this->pin_= pin;}
+  void set_gain(adc_gain gain) {this->gain_ = gain;}
+  void set_reference(adc_reference ref) {this->ref_ = ref;}
+  void set_resolution(uint8_t resolution) {this->resolution_ = resolution;}
+  void set_device(std::string device) { this->dev_ = device_get_binding(device.c_str()) ;}
+  void set_ref_voltage(float ref_volts);
+  #endif
   float sample() override;
 
 #ifdef USE_ESP8266
@@ -43,11 +56,20 @@ class ADCSensor : public sensor::Sensor, public PollingComponent, public voltage
 #endif
 
  protected:
-  InternalGPIOPin *pin_;
-  bool output_raw_{false};
-
 #ifdef USE_RP2040
   bool is_temperature_{false};
+#endif
+#ifndef USE_ZEPHYR
+  InternalGPIOPin *pin_;
+  bool output_raw_{false};
+#else
+  uint8_t pin_;
+  adc_gain gain_;
+  adc_reference ref_;
+  const struct device * dev_ = nullptr;
+  struct adc_channel_cfg config_;
+  uint8_t resolution_ = 10;
+  uint16_t  ref_mvolt_;
 #endif
 
 #ifdef USE_ESP32
