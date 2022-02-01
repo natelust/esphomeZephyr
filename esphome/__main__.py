@@ -39,7 +39,7 @@ from esphome.util import (
     get_serial_ports,
 )
 from esphome.log import color, setup_log, Fore
-from esphome.zephyr_writer import ZephyrDirectoryBuilder
+#from esphome.zephyr_writer import ZephyrDirectoryBuilder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,15 @@ def choose_upload_log_host(default, check_default, show_ota, show_mqtt, show_api
         return default
     if check_default is not None and check_default in [opt[1] for opt in options]:
         return check_default
+    if CORE.is_zephyr:
+        if which("mcumgr") is not None:
+            try:
+                from esphome.components.zephyr.netUpload import get_flash_address
+                address = get_flash_address()
+            except RuntimeError:
+                address = None
+            if address is not None:
+                options.append((f"Zephyr OTA?, {address}", address))
     return choose_prompt(options)
 
 
@@ -192,7 +201,7 @@ def generate_cpp_contents(config):
 
 def write_cpp_file():
     if CORE.target_platform == "zephyr":
-        with ZephyrDirectoryBuilder() as builder:
+        with CORE.zephyr_manager.get_writer() as builder:
             result = builder.run()
             if result == 0:
                 code_s = indent(CORE.cpp_main_section)
@@ -207,11 +216,10 @@ def write_cpp_file():
 
 def compile_program(args, config):
     from esphome import platformio_api
-    from esphome import zephyr_api
 
     _LOGGER.info("Compiling app...")
     if CORE.target_platform == "zephyr":
-        return zephyr_api.run_compile()
+        return CORE.zephyr_manager.compile()
     else:
         rc = platformio_api.run_compile(config, CORE.verbose)
         if rc != 0:
@@ -283,18 +291,7 @@ def upload_using_esptool(config, port):
 
 
 def upload_program(config, args, host):
-    if CORE.is_zephyr:
-        print("Previous prompt did nothing, set yaml string for serial")
-        if which("mcumgr") is not None:
-            while True:
-                network_flash = input("Flash over the network? (y/n)")
-                if network_flash in ("y", "n"):
-                    network_flash = network_flash == "y"
-                    break
-        else:
-            network_flash = False
-        from esphome.zephyr_api import run_upload
-        return run_upload(config, args, host, net_flash=network_flash)
+    # if upload is to a serial port use platformio, otherwise assume ota
     if get_port_type(host) == "SERIAL":
         if CORE.target_platform in (PLATFORM_ESP32, PLATFORM_ESP8266):
             return upload_using_esptool(config, host)
@@ -398,7 +395,10 @@ def command_upload(args, config):
         show_mqtt=False,
         show_api=False,
     )
-    exit_code = upload_program(config, args, port)
+    if CORE.is_zephyr:
+        exit_code = CORE.zephyr_manager.upload(config, args, port)
+    else:
+        exit_code = upload_program(config, args, port)
     if exit_code != 0:
         return exit_code
     _LOGGER.info("Successfully uploaded program.")
@@ -431,7 +431,10 @@ def command_run(args, config):
         show_mqtt=False,
         show_api=True,
     )
-    exit_code = upload_program(config, args, port)
+    if CORE.is_zephyr:
+        exit_code = CORE.zephyr_manager.upload(config, args, port)
+    else:
+        exit_code = upload_program(config, args, port)
     if exit_code != 0:
         return exit_code
     _LOGGER.info("Successfully uploaded program.")

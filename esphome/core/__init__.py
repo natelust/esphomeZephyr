@@ -601,12 +601,12 @@ class EsphomeCore:
         return self.target_platform == "zephyr"
 
     @property
-    def zephyr_manager(self) -> Optional["ZephyrManager"]:
+    def zephyr_manager(self) -> "ZephyrManager":
         from esphome.components.zephyr.const import ZEPHYR_CORE_KEY
-        if self.is_zephyr:
-            return self.data[ZEPHYR_CORE_KEY]
-        else:
-            return None
+        if not self.is_zephyr:
+            raise ValueError("Zephyr manager can only be used if paltform is zephyr")
+
+        return self.data[ZEPHYR_CORE_KEY]
 
     @property
     def target_framework(self):

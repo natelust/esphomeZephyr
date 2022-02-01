@@ -1,12 +1,11 @@
-from typing import Tuple, Mapping
+from textwrap import dedent
+from typing import Tuple, Mapping, List
 
-from ..baseBoardValidator import BaseZephyrBoard
+from ..nrf52840_base import NRF52840Base, GPIO_0, GPIO_1
 from .. import registry
 
 import esphome.config_validation as cv
 
-GPIO_0 = "gpio0"
-GPIO_1 = "gpio1"
 
 pinMapping = {
     "D0": (GPIO_0, 25),  # UART TX
@@ -74,85 +73,82 @@ analogMapping: Mapping[str, int] = {
 
 
 @registry.register("adafruit_feather_nrf52840")
-class AdafruitFeatherNrf52840(BaseZephyrBoard):
+class AdafruitFeatherNrf52840(NRF52840Base):
+    def get_writer(self):
+        self._manager.add_Kconfig_vec((
+        ("CONFIG_NORDIC_QSPI_NOR", "y"),
+        ("CONFIG_NORDIC_QSPI_NOR_FLASH_LAYOUT_PAGE_SIZE", 4096),
+        ("CONFIG_NORDIC_QSPI_NOR_STACK_WRITE_BUFFER_SIZE", 16),))
+        return super().get_writer()
+
     def __str__(self):
         return "adafruit_feather_nrf52840"
 
-    def SDA_PIN(self) -> str:
-        return "D22"
+            #writeoc = "pp";
+            #readoc = "fastread";
+            #writeoc = "pp";
+    def flash_mapping(self) -> str:
+        mapping = dedent("""
+        /delete-node/ &slot1_partition;
 
-    def SCL_PIN(self) -> str:
-        return "D23"
+        &slot0_partition {
+            reg = < 0x0000C000 0xce000 >;
+        };
 
-    def validate_gpio_pin(self, value):
-        # do nothing for now, fix this later
-        return value
+        &gd25q16 {
+            readoc = "read4o";
+            writeoc = "pp4o";
+            quad-enable-bit = < 9 >;
+            partitions {
+                compatible = "fixed-partitions";
+                #address-cells = <1>;
+                #size-cells = <1>;
 
-    def validate_supports(self, value):
-        # do nothing for now, fix this later
-        return value
 
-    def get_device_and_pin(self, pin):
-        value = pinMapping.get(pin)
-        if value is None:
-            raise NotImplementedError(f"Cannot handle pin specifier {pin}, "
-                                      f"must be one of {pinMapping.keys()}")
-        return value
+                slot1_partition: partition@0 {
+                        label = "image-1";
+                        reg = <0x0 0xce000>;
+                };
+            };
+        };
+        """)
+        return mapping
+        """
+                header: partition@0 {
+                    label = "extra-header";
+                    reg = <0x00000000 0x400>;
+                };
+                partition@ce400 {
+                    label = "extra-storage";
+                    reg = < 0xce400 0x131c00>;
+                };
+                """
 
-    def can_openthread(self) -> bool:
-        return True
+    def pre_compile_bootloader(self, args: List[str]) -> List[str]:
+        #args.extend(("-DCONFIG_BOOT_MAX_IMG_SECTORS=1024",))
+        args.extend(("-DCONFIG_MULTITHREADING=y",
+                     "-DCONFIG_BOOT_MAX_IMG_SECTORS=256",
+                     "-DCONFIG_NORDIC_QSPI_NOR=y",
+                     "-DCONFIG_NORDIC_QSPI_NOR_FLASH_LAYOUT_PAGE_SIZE=4096",
+                     "-DCONFIG_NORDIC_QSPI_NOR_STACK_WRITE_BUFFER_SIZE=16",
+                     "-DCONFIG_LOG_MAX_LEVEL=4",
+                     "-DCONFIG_SIZE_OPTIMIZATIONS=y",
+                     "-DCONFIG_MCUBOOT_LOG_LEVEL_DBG=y",
+                     "-DCONFIG_MCUBOOT_UTIL_LOG_LEVEL_DBG=y"))
+        return args
 
-    def i2c_arg_validator(self, **kwargs):
-        if kwargs['sda'] == self.SDA_PIN() and kwargs['scl'] == self.SCL_PIN():
-            if kwargs['frequency'] != 100000.0 and kwargs['frequency'] != 400000:
-                raise ValueError(f"{type(self)} only supports 100kHz and 400kHz for "
-                                 "the built in i2c controller")
+    @property
+    def pinMapping(self) -> Mapping[str, Tuple[str, int]]:
+        return pinMapping
 
-    def spi_device(self) -> str:
-        return "spi1"
+    @property
+    def analogMapping(self) -> Mapping[str, int]:
+        return analogMapping
 
-    def spi_arg_validator(self, **kwargs):
-        return
-
-    def spi_pins(self, clk=None, mosi=None, miso=None) -> Mapping[str, str]:
-        if clk is None:
-            clk = "D26"
-        if mosi is None:
-            mosi = "D25"
-        if miso is None:
-            miso = "D24"
-        result = {}
-        for name, pointer in (("clk", clk), ("mosi", mosi), ("miso", miso)):
-            controller, pin = self.get_device_and_pin(pointer)
-            if controller == GPIO_1:
-                pin += 32
-            result[name] = pin
-        return result
-
-    def get_analog_channel(self, pin) -> int:
-        return analogMapping[pin]
-
-    def adc_device(self) -> str:
-        return "adc"
-
-    def validate_adc_pin(self, value):
-        in_pin = value
-        if in_pin not in  ("A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7",
-                           "D14", "D15", "D16", "D17", "D18", "D19", "D20",
-                           "D21"):
-            raise cv.Invalid(f"{value} cannot be used as ADC on {self}")
-        pin = self.get_analog_channel(in_pin)
-        return pin
-
-    def adc_arg_validator(self, **kwargs) -> None:
-        #if kwargs['gain'].enum_value not in ("ADC_GAIN_1_3", "ADC_GAIN_2_3",
-                                             #"ADC_GAIN_1"):
-            #raise cv.Invalid(f"{self} does not support gain {kwargs['gain']}")
-        if kwargs['ref'].enum_value not in ("ADC_REF_INTERNAL",
-                                            "ADC_REF_VDD_1_2",
-                                            "ADC_REF_VDD_1_3",
-                                            "ADC_REF_VDD_1_4",
-                                            "ADC_REF_EXTERNAL0",
-                                            "ADC_REF_EXTERNAL1"):
-            raise cv.Invalid(f"{self} does not support reference "
-                             f"{kwargs['ref']}")
+    def i2c_arg_parser(self, kwargs):
+        if kwargs['sda'] == 'SDA':
+            kwargs['sda'] = "D22"
+        if kwargs['scl'] == 'SCL':
+            kwargs['scl'] = "D23"
+        hardware, device = super().i2c_arg_parser(kwargs)
+        return hardware, device
