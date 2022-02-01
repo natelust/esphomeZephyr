@@ -1,8 +1,8 @@
 #pragma once
+#include "esphome/core/defines.h"
 #ifndef USE_ZEPHYR
 
 #include <vector>
-#include "spi.h"
 
 #ifdef USE_ARDUINO
 #define USE_SPI_ARDUINO_BACKEND
@@ -15,7 +15,7 @@
 namespace esphome {
 namespace spi {
 
-class ESPSPIComponent : public SPIComponent, public Component {
+class SPIComponent : public Component {
  public:
   void set_clk(GPIOPin *clk) { clk_ = clk; }
   void set_miso(GPIOPin *miso) { miso_ = miso; }

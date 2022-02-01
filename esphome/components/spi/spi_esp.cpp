@@ -1,15 +1,15 @@
+#include "spi.h"
+
+#ifndef USE_ZEPHYR
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/application.h"
-#include "spi_esp.h"
-
-#ifndef USE_ZEPHYR
 namespace esphome {
 namespace spi {
 
 static const char *const TAG = "spi";
 
-void IRAM_ATTR HOT ESPSPIComponent::disable() {
+void IRAM_ATTR HOT SPIComponent::disable() {
 #ifdef USE_SPI_ARDUINO_BACKEND
   if (this->hw_spi_ != nullptr) {
     this->hw_spi_->endTransaction();
@@ -20,7 +20,7 @@ void IRAM_ATTR HOT ESPSPIComponent::disable() {
     this->active_cs_ = nullptr;
   }
 }
-void ESPSPIComponent::setup() {
+void SPIComponent::setup() {
   ESP_LOGCONFIG(TAG, "Setting up SPI bus...");
   this->clk_->setup();
   this->clk_->digital_write(true);
@@ -98,7 +98,7 @@ void ESPSPIComponent::setup() {
     this->mosi_->digital_write(false);
   }
 }
-void ESPSPIComponent::dump_config() {
+void SPIComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "SPI bus:");
   LOG_PIN("  CLK Pin: ", this->clk_);
   LOG_PIN("  MISO Pin: ", this->miso_);
@@ -107,9 +107,9 @@ void ESPSPIComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "  Using HW SPI: %s", YESNO(this->hw_spi_ != nullptr));
 #endif  // USE_SPI_ARDUINO_BACKEND
 }
-float ESPSPIComponent::get_setup_priority() const { return setup_priority::BUS; }
+float SPIComponent::get_setup_priority() const { return setup_priority::BUS; }
 
-void ESPSPIComponent::cycle_clock_(bool value) {
+void SPIComponent::cycle_clock_(bool value) {
   uint32_t start = arch_get_cpu_cycle_count();
   while (start - arch_get_cpu_cycle_count() < this->wait_cycle_)
     ;
@@ -127,7 +127,7 @@ void ESPSPIComponent::cycle_clock_(bool value) {
 #endif  // CLANG_TIDY
 
 template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE, bool READ, bool WRITE>
-uint8_t HOT ESPSPIComponent::transfer_(uint8_t data) {
+uint8_t HOT SPIComponent::transfer_(uint8_t data) {
   // Clock starts out at idle level
   this->clk_->digital_write(CLOCK_POLARITY);
   uint8_t out_data = 0;
@@ -187,56 +187,56 @@ uint8_t HOT ESPSPIComponent::transfer_(uint8_t data) {
 // for b, cpol, cph, r, w in product(bit_orders, clock_pols, clock_phases, reads, writes):
 //     if not r and not w:
 //         continue
-//     print(f"template uint8_t ESPSPIComponent::transfer_<{b}, {cpol}, {cph}, {cpp_bool[r]}, {cpp_bool[w]}>(uint8_t
+//     print(f"template uint8_t SPIComponent::transfer_<{b}, {cpol}, {cph}, {cpp_bool[r]}, {cpp_bool[w]}>(uint8_t
 //     data);")
 
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_LSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_LEADING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_LOW, CLOCK_PHASE_TRAILING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_LEADING, true, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, false, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, false, true>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, false>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, false>(
     uint8_t data);
-template uint8_t ESPSPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, true>(
+template uint8_t SPIComponent::transfer_<BIT_ORDER_MSB_FIRST, CLOCK_POLARITY_HIGH, CLOCK_PHASE_TRAILING, true, true>(
     uint8_t data);
 
 }  // namespace spi
