@@ -147,7 +147,7 @@ template<> const char *proto_enum_to_string<enums::SensorLastResetType>(enums::S
 #ifdef HAS_PROTO_MESSAGE_DUMP
 template<> const char *proto_enum_to_string<enums::LogLevel>(enums::LogLevel value) {
   switch (value) {
-    case enums::LOG_LEVEL_NONE:
+    case enums::LOG_LEVEL_NIL:
       return "LOG_LEVEL_NONE";
     case enums::LOG_LEVEL_ERROR:
       return "LOG_LEVEL_ERROR";

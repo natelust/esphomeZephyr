@@ -61,7 +61,7 @@ enum SensorLastResetType : uint32_t {
   LAST_RESET_AUTO = 2,
 };
 enum LogLevel : uint32_t {
-  LOG_LEVEL_NONE = 0,
+  LOG_LEVEL_NIL = 0,
   LOG_LEVEL_ERROR = 1,
   LOG_LEVEL_WARN = 2,
   LOG_LEVEL_INFO = 3,
@@ -70,6 +70,8 @@ enum LogLevel : uint32_t {
   LOG_LEVEL_VERBOSE = 6,
   LOG_LEVEL_VERY_VERBOSE = 7,
 };
+
+
 enum ServiceArgType : uint32_t {
   SERVICE_ARG_TYPE_BOOL = 0,
   SERVICE_ARG_TYPE_INT = 1,
