@@ -7,4 +7,7 @@ ZEPHYR_BASE = "zephyr_base"
 KCONFIG_KEY = "Kconfigs"
 FLASH_ARGS = "flash_args"
 
+PROJ_DIR = "proj"
+BOOT_DIR = "boot"
+
 zephyr_ns = cg.global_ns.namespace("esphome").namespace("zephyr")

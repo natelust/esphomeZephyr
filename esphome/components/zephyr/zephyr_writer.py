@@ -1,16 +1,20 @@
+from __future__ import annotations
 import logging
 import os
 import shutil
 import subprocess
 
+from typing import TYPE_CHECKING
+
 from textwrap import dedent
 
-from .core import CORE
-from .components.zephyr.const import ZEPHYR_BASE, ZEPHYR_CORE_KEY, KCONFIG_KEY
+from esphome.core import CORE
+from .const import ZEPHYR_BASE, ZEPHYR_CORE_KEY, KCONFIG_KEY
 from esphome.helpers import mkdir_p
-from esphome.components.zephyr import ZephyrManager
 
-from typing import cast
+
+if TYPE_CHECKING:
+    from esphome.components.zephyr import ZephyrManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +33,10 @@ class ZephyrDirectoryBuilder:
     boot_dir: str
     key_file: str
 
-    def __init__(self):
+    def __init__(self, manager: ZephyrManager):
         assert CORE.name is not None
         self.proj_name = CORE.name
-        self.manager = cast(ZephyrManager, CORE.zephyr_manager)
+        self.manager = manager
         self.zephyr_base = self.manager.zephyr_base
         self.proj_dir = CORE.relative_build_path(os.path.join(PROJ_DIR, CORE.name))
         self.boot_dir = CORE.relative_build_path(BOOT_DIR)
@@ -59,6 +63,7 @@ class ZephyrDirectoryBuilder:
         self.createCmakeFile()
         self.createProjFile()
         self.createAppOverlay()
+        self.createAppOverlayBoot()
 
         return 0
 
@@ -95,6 +100,11 @@ class ZephyrDirectoryBuilder:
         with open(os.path.join(self.proj_dir, "prj.conf"), "w") as f:
             f.write(result)
 
+    def createAppOverlayBoot(self) -> None:
+        contents = self.manager.board.flash_mapping()
+        with open(os.path.join(self.boot_dir, "mcuboot", "boot", "zephyr", "dts.overlay"), "a") as f:
+            f.write(contents)
+
                     #zephyr,console = &cdc_acm_uart0;
     def createAppOverlay(self) -> None:
         contents = dedent("""
@@ -117,6 +127,7 @@ class ZephyrDirectoryBuilder:
                 };
             };
         """)
+        contents += self.manager.board.flash_mapping()
         contents = '\n'.join((contents, *self.manager.device_overlay_list))
 
         with open(os.path.join(self.proj_dir, "app.overlay"), "w") as f:
@@ -149,9 +160,9 @@ class ZephyrDirectoryBuilder:
             ignore=shutil.ignore_patterns(".git")
         )
 
-        boot_config_path = os.path.join(self.boot_dir, "mcuboot", "prj.conf")
+        boot_config_path = os.path.join(self.boot_dir, "mcuboot", "boot", "zephyr", "prj.conf")
         with open(boot_config_path, "a") as f:
-            config = 'CONFIG_BOOT_SIGNATURE_KEY_FILE="{}.pem"'
+            config = 'CONFIG_BOOT_SIGNATURE_KEY_FILE="{}"\n'
             f.write(config.format(os.path.abspath(self.key_file)))
 
 

@@ -24,9 +24,9 @@ from esphome.helpers import (
 from esphome.storage_json import StorageJSON, storage_path
 from esphome import loader
 
-from .zephyr_writer import (AUTO_GEN_ZEPHYR_MAIN_BEGIN,
-                            AUTO_GEN_ZEPHYR_MAIN_END,
-                            add_zephyr_main)
+from esphome.components.zephyr.zephyr_writer import (AUTO_GEN_ZEPHYR_MAIN_BEGIN,
+                                                    AUTO_GEN_ZEPHYR_MAIN_END,
+                                                    add_zephyr_main)
 
 _LOGGER = logging.getLogger(__name__)
 
