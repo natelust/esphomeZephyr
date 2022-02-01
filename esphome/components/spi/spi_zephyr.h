@@ -3,15 +3,16 @@
 
 #include <drivers/spi.h>
 #include <string>
-#include "spi.h"
 
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace spi {
 
 enum ZephyrDirectionControl {READ, WRITE, BOTH};
 
-class ZephyrSPIComponent : public SPIComponent, public Component {
+//class ZephyrSPIComponent : public SPIComponent, public Component {
+class SPIComponent : public Component {
   public:
   /*
     void setup() override;
@@ -44,7 +45,7 @@ class ZephyrSPIComponent : public SPIComponent, public Component {
     void set_clk(GPIOPin *clk) {}
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     uint8_t read_byte() {
         uint8_t rx[1];
         transceive_<ZephyrDirectionControl::READ>(rx, 1);
@@ -52,50 +53,51 @@ class ZephyrSPIComponent : public SPIComponent, public Component {
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void read_array(uint8_t *data, size_t length) {
+        ESP_LOGI("spi_zephyr", "reading array");
         transceive_<ZephyrDirectionControl::READ>(data, length);
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void write_byte(uint8_t data) {
         uint8_t tx[1] = {data};
         transceive_<ZephyrDirectionControl::WRITE>(tx, 1);
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void write_array(const uint8_t *data, size_t length) {
-        transceive_<ZephyrDirectionControl::WRITE, const uint8_t *>(data, length);
+        transceive_<ZephyrDirectionControl::WRITE>(const_cast<uint8_t *>(data), length);
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void write_byte16(const uint16_t data) {
-        this->write_byte(data >> 8);
-        this->write_byte(data);
+        this->write_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>((uint8_t)(data >> 8));
+        this->write_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>((uint8_t)data);
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void write_array16(const uint16_t *data, size_t length) {
         for (size_t i = 0; i < length; i++) {
-            this->write_byte16(data[i]);
+            this->write_byte16<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>(data[i]);
         }
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     void transfer_array(uint8_t *data, size_t length) {
         transceive_<ZephyrDirectionControl::BOTH>(data, length);
     }
 
     //templates not needed with zephyr
-    template<class... Types>
+    template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
     uint8_t transfer_byte(uint8_t data) {
         uint8_t tx[1] = data;
-        transceive_<ZephyrDirectionControl::BOTH>(&tx, 1);
+        transceive_<ZephyrDirectionControl::BOTH>(tx, 1);
         return tx[1];
     }
 
@@ -115,8 +117,8 @@ class ZephyrSPIComponent : public SPIComponent, public Component {
     std::string miso_str = "";
     std::string clk_str = "";
 
-    template<ZephyrDirectionControl dir, typename data_type=uint8_t *>
-    void transceive_(data_type data, size_t length);
+    template<ZephyrDirectionControl dir>
+    void transceive_(uint8_t * data, size_t length);
 
 };
 

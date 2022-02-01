@@ -14,23 +14,25 @@ from esphome.core import coroutine_with_priority, CORE
 
 CODEOWNERS = ["@esphome/core"]
 spi_ns = cg.esphome_ns.namespace("spi")
-#SPIComponent = spi_ns.class_("SPIComponent", cg.Component)
-ESPSPIComponent = spi_ns.class_("ESPSPIComponent", cg.Component)
-ZephyrSPIComponent = spi_ns.class_("ZephyrSPIComponent", cg.Component)
+SPIComponent = spi_ns.class_("SPIComponent", cg.Component)
+#ESPSPIComponent = spi_ns.class_("ESPSPIComponent", cg.Component)
+#ZephyrSPIComponent = spi_ns.class_("ZephyrSPIComponent", cg.Component)
 SPIDevice = spi_ns.class_("SPIDevice")
 MULTI_CONF = True
 
 
+"""
 def _bus_declare_type(value):
     if CORE.is_zephyr:
         return cv.declare_id(ZephyrSPIComponent)(value)
     else:
         return cv.declare_id(ESPSPIComponent)(value)
+"""
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
-            cv.GenerateID(): _bus_declare_type,
+            cv.GenerateID(): cv.declare_id(SPIComponent),
             cv.Required(CONF_CLK_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_MISO_PIN): pins.gpio_input_pin_schema,
             cv.Optional(CONF_MOSI_PIN): pins.gpio_output_pin_schema,
@@ -65,6 +67,14 @@ async def to_code(config):
         cg.add(var.set_clk_name("'{}'".format(result['clk'])))
         cg.add(var.set_device(cg.RawExpression(f'DT_LABEL(DT_NODELABEL({result["device"]}))')))
 
+
+"""
+def _id_selector():
+    if CORE.is_zephyr:
+        return cv.use_id(ZephyrSPIComponent)
+    else:
+        return cv.use_id(ESPSPIComponent)
+"""
 
 def spi_device_schema(cs_pin_required=True):
     """Create a schema for an SPI device.

@@ -1,8 +1,8 @@
 #pragma once
+#include "esphome/core/defines.h"
 #ifndef USE_ZEPHYR
 
 #include <vector>
-#include "spi.h"
 
 #ifdef USE_ARDUINO
 #define USE_SPI_ARDUINO_BACKEND
@@ -15,7 +15,7 @@
 namespace esphome {
 namespace spi {
 
-class ESPSPIComponent : public SPIComponent, public Component {
+class SPIComponent : public Component {
  public:
   void set_clk(GPIOPin *clk) { clk_ = clk; }
   void set_miso(GPIOPin *miso) { miso_ = miso; }
@@ -51,7 +51,11 @@ class ESPSPIComponent : public SPIComponent, public Component {
   void write_byte(uint8_t data) {
 #ifdef USE_SPI_ARDUINO_BACKEND
     if (this->hw_spi_ != nullptr) {
+#ifdef USE_RP2040
+      this->hw_spi_->transfer(data);
+#else
       this->hw_spi_->write(data);
+#endif
       return;
     }
 #endif  // USE_SPI_ARDUINO_BACKEND
@@ -62,7 +66,11 @@ class ESPSPIComponent : public SPIComponent, public Component {
   void write_byte16(const uint16_t data) {
 #ifdef USE_SPI_ARDUINO_BACKEND
     if (this->hw_spi_ != nullptr) {
+#ifdef USE_RP2040
+      this->hw_spi_->transfer16(data);
+#else
       this->hw_spi_->write16(data);
+#endif
       return;
     }
 #endif  // USE_SPI_ARDUINO_BACKEND
@@ -76,7 +84,11 @@ class ESPSPIComponent : public SPIComponent, public Component {
 #ifdef USE_SPI_ARDUINO_BACKEND
     if (this->hw_spi_ != nullptr) {
       for (size_t i = 0; i < length; i++) {
+#ifdef USE_RP2040
+        this->hw_spi_->transfer16(data[i]);
+#else
         this->hw_spi_->write16(data[i]);
+#endif
       }
       return;
     }
@@ -91,7 +103,11 @@ class ESPSPIComponent : public SPIComponent, public Component {
 #ifdef USE_SPI_ARDUINO_BACKEND
     if (this->hw_spi_ != nullptr) {
       auto *data_c = const_cast<uint8_t *>(data);
+#ifdef USE_RP2040
+      this->hw_spi_->transfer(data_c, length);
+#else
       this->hw_spi_->writeBytes(data_c, length);
+#endif
       return;
     }
 #endif  // USE_SPI_ARDUINO_BACKEND
@@ -102,15 +118,17 @@ class ESPSPIComponent : public SPIComponent, public Component {
 
   template<SPIBitOrder BIT_ORDER, SPIClockPolarity CLOCK_POLARITY, SPIClockPhase CLOCK_PHASE>
   uint8_t transfer_byte(uint8_t data) {
-#ifdef USE_SPI_ARDUINO_BACKEND
     if (this->miso_ != nullptr) {
+#ifdef USE_SPI_ARDUINO_BACKEND
       if (this->hw_spi_ != nullptr) {
         return this->hw_spi_->transfer(data);
       } else {
-        return this->transfer_<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE, true, true>(data);
-      }
-    }
 #endif  // USE_SPI_ARDUINO_BACKEND
+        return this->transfer_<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE, true, true>(data);
+#ifdef USE_SPI_ARDUINO_BACKEND
+      }
+#endif  // USE_SPI_ARDUINO_BACKEND
+    }
     this->write_byte<BIT_ORDER, CLOCK_POLARITY, CLOCK_PHASE>(data);
     return 0;
   }
@@ -122,7 +140,11 @@ class ESPSPIComponent : public SPIComponent, public Component {
       if (this->miso_ != nullptr) {
         this->hw_spi_->transfer(data, length);
       } else {
+#ifdef USE_RP2040
+        this->hw_spi_->transfer(data, length);
+#else
         this->hw_spi_->writeBytes(data, length);
+#endif
       }
       return;
     }
@@ -141,8 +163,19 @@ class ESPSPIComponent : public SPIComponent, public Component {
   void enable(GPIOPin *cs) {
 #ifdef USE_SPI_ARDUINO_BACKEND
     if (this->hw_spi_ != nullptr) {
-      uint8_t data_mode = (uint8_t(CLOCK_POLARITY) << 1) | uint8_t(CLOCK_PHASE);
+      uint8_t data_mode = SPI_MODE0;
+      if (!CLOCK_POLARITY && CLOCK_PHASE) {
+        data_mode = SPI_MODE1;
+      } else if (CLOCK_POLARITY && !CLOCK_PHASE) {
+        data_mode = SPI_MODE2;
+      } else if (CLOCK_POLARITY && CLOCK_PHASE) {
+        data_mode = SPI_MODE3;
+      }
+#ifdef USE_RP2040
+      SPISettings settings(DATA_RATE, static_cast<BitOrder>(BIT_ORDER), data_mode);
+#else
       SPISettings settings(DATA_RATE, BIT_ORDER, data_mode);
+#endif
       this->hw_spi_->beginTransaction(settings);
     } else {
 #endif  // USE_SPI_ARDUINO_BACKEND
