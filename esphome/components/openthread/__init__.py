@@ -1,5 +1,3 @@
-from voluptuous.error import InInvalid
-from voluptuous.schema_builder import Required
 from esphome.components.zephyr import ZEPHYR_CORE_KEY
 from esphome.const import (KEY_CORE, KEY_TARGET_PLATFORM)
 
