@@ -10,7 +10,9 @@
 #endif  // USE_ESP32_FRAMEWORK_ARDUINO || USE_ESP_IDF
 
 #ifdef USE_ZEPHYR
-#include <sys/printk.h>
+//#include <sys/printk.h>
+#include <logging/log.h>
+LOG_MODULE_REGISTER(zephyr);
 #endif
 
 #include "esphome/core/hal.h"
@@ -139,8 +141,9 @@ void HOT Logger::log_message_(int level, const char *tag, int offset) {
     }
 #endif
 #ifdef USE_ZEPHYR
-  printk(msg);
-  printk("\n");
+  //printk("%s", msg);
+  //printk("\n");
+  LOG_INF("%s\n", msg);
 #endif
   }
 
