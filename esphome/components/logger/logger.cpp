@@ -10,7 +10,9 @@
 #endif
 
 #ifdef USE_ZEPHYR
-#include <sys/printk.h>
+//#include <sys/printk.h>
+#include <logging/log.h>
+LOG_MODULE_REGISTER(zephyr);
 #endif
 
 #include "esphome/core/log.h"
@@ -125,8 +127,9 @@ void HOT Logger::log_message_(int level, const char *tag, int offset) {
     uart_write_bytes(uart_num_, "\n", 1);
 #endif
 #ifdef USE_ZEPHYR
-  printk(msg);
-  printk("\n");
+  //printk("%s", msg);
+  //printk("\n");
+  LOG_INF("%s\n", msg);
 #endif
   }
 
