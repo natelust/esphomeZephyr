@@ -12,7 +12,7 @@
 #ifdef USE_ZEPHYR
 //#include <sys/printk.h>
 #include <logging/log.h>
-LOG_MODULE_REGISTER(zephyr);
+LOG_MODULE_REGISTER(esphome);
 #endif
 
 #include "esphome/core/hal.h"
