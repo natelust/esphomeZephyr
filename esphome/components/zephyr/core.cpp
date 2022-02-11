@@ -17,7 +17,7 @@ void arch_restart() {
     sys_reboot(SYS_REBOOT_COLD);
 }
 void arch_feed_wdt() {}
-uint8_t progmem_read_byte(const uint8_t *addr) { return 0; }
+uint8_t progmem_read_byte(const uint8_t *addr) { return *addr; }
 }
 uint32_t arch_get_cpu_cycle_count() {
     return k_uptime_ticks();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/hal.h"
+#include "esphome/core/log.h"
 #include <drivers/gpio.h>
 #include <devicetree.h>
 #include <vector>
@@ -18,12 +19,18 @@ class ZephyrGPIOPin : public InternalGPIOPin{
  public:
   void set_pin(uint8_t pin) { pin_ = pin; }
   void set_inverted(bool inverted) { inverted_ = inverted; }
-  void set_flags(gpio::Flags flags) { flags_ = flags; }
+  void set_flags(gpio::Flags flags) {
+    flags_ = flags;
+    // Set this here, as zephyr is fine with it, and
+    // setup does not seem to be triggering for GPIO
+    // devices
+    this->pin_mode(this->flags_);
+  }
   void set_device(const struct device * device) {this->device = device;}
   void set_device_label(const char * label) {
     this->set_device(device_get_binding(label));
   }
-  void setup() override { pin_mode(flags_); }
+  void setup() override { this->pin_mode(this->flags_); }
   void pin_mode(gpio::Flags flags) override;
   bool digital_read() override;
   void digital_write(bool value) override;
