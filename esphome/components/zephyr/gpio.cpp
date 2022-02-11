@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include <sys/util.h>
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace zephyr {
@@ -61,6 +62,10 @@ void ZephyrGPIOPin::pin_mode(gpio::Flags flags) {
     mode = GPIO_INPUT | GPIO_PULL_DOWN;
   } else if (flags == (gpio::FLAG_OUTPUT | gpio::FLAG_OPEN_DRAIN)) {
     mode = GPIO_OUTPUT | GPIO_OPEN_DRAIN;
+  } else if (flags == (gpio::FLAG_OUTPUT | gpio::FLAG_PULLUP)) {
+    mode = GPIO_OUTPUT | GPIO_PULL_UP;
+  } else if (flags == (gpio::FLAG_OUTPUT | gpio::FLAG_PULLDOWN)) {
+    mode = GPIO_OUTPUT | GPIO_PULL_DOWN;
   } else {
     return;
   }
