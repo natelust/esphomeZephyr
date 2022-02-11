@@ -29,7 +29,7 @@ void SPIComponent::enable(GPIOPin *cs) {
         return;
     }
     this->config = new spi_config {
-        .frequency=DATA_RATE,
+        .frequency = DATA_RATE,
         .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_LOCK_ON
     };
 
@@ -48,7 +48,6 @@ void SPIComponent::enable(GPIOPin *cs) {
 
 
     if (cs != nullptr) {
-        ESP_LOGI(TAG, "ENABLING GPIO");
         this->active_cs_ = cs;
         this->active_cs_->digital_write(false);
     }
@@ -111,7 +110,7 @@ void SPIComponent::transceive_(uint8_t * data, size_t length) {
             };
             name = "transfer";
             result = spi_transceive(device, config, &buffer, &read_buff);
-            if (result != 0) {
+            if (result == 0) {
                 memcpy(data, read_arr, length);
             }
             delete read_arr;
