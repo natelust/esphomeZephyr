@@ -16,7 +16,7 @@ DEPENDENCIES = ["spi"]
 
 adafruit_epaper_ns = cg.esphome_ns.namespace("adafruit_epaper")
 AdafruitEPaper = adafruit_epaper_ns.class_(
-    "AdafruitEPaper", cg.Component, spi.SPIDevice, display.DisplayBuffer
+    "AdafruitEPaper", cg.PollingComponent, spi.SPIDevice, display.DisplayBuffer
 )
 
 ThinkInk_213_Tricolor_RW = adafruit_epaper_ns.class_(
@@ -37,6 +37,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_BUSY_PIN): pins.gpio_output_pin_schema
         }
     )
+    .extend(cv.polling_component_schema("180s"))
     .extend(spi.spi_device_schema()),
     cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA),
 )

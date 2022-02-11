@@ -27,18 +27,17 @@ template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::setup() {
     ESP_LOGD(TAG, "Initializing EPaper display");
 
-    memset(black_buffer, 0xFF, buffer_size);
-    if (COLOR) {
-        memset(color_buffer, 0x00, buffer_size);
-    }
+    this->clear_buffers();
     this->cs_->digital_write(true);
     //this->init_commands();
     this->hardware_reset();
 
+    /*
     for (int i = 30 ; i < 61; i++ ) {
         for (int j = 30; j < 61; j++)
             draw_absolute_pixel_internal(i, j, Color(1, 0, 0));
     }
+    */
     //this->display();
     //this->clear();
     //this->power_down();
@@ -73,7 +72,7 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::display() {
         this->write_framebuffer_to_display(Buffer::COLOR, false);
     }
     this->update_display();
-    //this->power_down();
+    this->power_down();
 }
 
 template <int WIDTH, int HEIGHT, bool COLOR>
@@ -176,7 +175,13 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::hardware_reset() {
 
 template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::draw_absolute_pixel_internal(int x, int y, Color color){
-    if ( x >= WIDTH || y >= HEIGHT || x < 0 || y < 0 ) {
+    if ( x >= WIDTH || y >= HEIGHT) {
+        ESP_LOGE(TAG, "got pixel data, above bounds");
+        return;
+
+    }
+    if ( x < 0 || y < 0 ) {
+        ESP_LOGE(TAG, "got pixel data, below bounds");
         return;
     }
     
@@ -185,19 +190,34 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::draw_absolute_pixel_internal(int x, i
     uint8_t * black_buf_off = this->black_buffer + offset;
     uint8_t * color_buf_off = this->color_buffer + offset;
 
-    if ((color.r == 0) && (color.g == 0) && (color.b == 0)) {
-        *black_buf_off &= ~(1 << (7 - y % 8));
-    } else {
-        *black_buf_off |= (1 << (7 - y % 8));
-    }
-    
-    if (COLOR) {
-        if (color.r > 0) {
-            *color_buf_off |= (1 << (7 - y % 8));
+    bool is_black = (color.r == 0) && (color.g == 0) && (color.b == 0);
+    if (is_black) {
+        if (!this->invert_black_color[Buffer::BLACK]) {
+            *black_buf_off &= ~(1 << (7 - y % 8));
         } else {
-            *color_buf_off &= ~(1 << (7 - y % 8));
+            *black_buf_off |= (1 << (7 - y % 8));
         }
     }
+    
+    static uint8_t counter = 0;
+
+    if (COLOR) {
+        //bool is_red = color.r > 0;
+        bool is_red = color.is_on();
+        if (is_red) {
+            if (!this->invert_black_color[Buffer::COLOR]) {
+                *color_buf_off |= (1 << (7 - y % 8));
+            } else {
+                *color_buf_off &= ~(1 << (7 - y % 8));
+            }
+        }
+    }
+}
+
+template <int WIDTH, int HEIGHT, bool COLOR>
+void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::update() {
+    this->do_update_();
+    this->display();
 }
 
 
@@ -215,6 +235,7 @@ template void AdafruitEPaper<250, 122, true>::command(uint8_t cmd, bool end);
 template void AdafruitEPaper<250, 122, true>::command(uint8_t cmd, const uint8_t *buf, uint16_t length);
 template void AdafruitEPaper<250, 122, true>::hardware_reset();
 template void AdafruitEPaper<250, 122, true>::draw_absolute_pixel_internal(int x, int y, Color color);
+template void AdafruitEPaper<250, 122, true>::update();
 #endif
 
 } // namespace adafruit_epaper

@@ -14,7 +14,7 @@ enum Buffer {
 };
 
 template <int WIDTH, int HEIGHT, bool COLOR>
-class AdafruitEPaper : public Component,
+class AdafruitEPaper : public PollingComponent,
                        public display::DisplayBuffer,
                        public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST,
                                            spi::CLOCK_POLARITY_LOW,
@@ -33,6 +33,8 @@ class AdafruitEPaper : public Component,
     void on_safe_shutdown() override;
     void setup() override;
 
+    void update() override;
+
     void busy_wait();
 
   protected:
@@ -46,7 +48,7 @@ class AdafruitEPaper : public Component,
     void draw_absolute_pixel_internal(int x, int y, Color color) override;
 
     int get_height_internal() override {
-        return _HEIGHT;
+        return HEIGHT;
     }
 
     int get_width_internal() override {
