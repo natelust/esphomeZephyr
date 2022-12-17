@@ -228,6 +228,7 @@ async def to_code(config):
     if CORE.zephyr_manager is not None:
         CORE.zephyr_manager.add_Kconfig_vec((
             ("CONFIG_LOG_BACKEND_UART", "y"),
+            ("CONFIG_UART_CONSOLE", "y"),
             ("CONFIG_LOG_PRINTK", "y"),
             ("CONFIG_SHELL_LOG_BACKEND", "y"),
         ))

@@ -7,6 +7,11 @@
 #include <cstdlib>
 #include <ctime>
 
+#ifdef USE_ZEPHYR
+#include <sys/timeutil.h>
+#include <kernel.h>
+#endif
+
 namespace esphome {
 namespace time {
 
@@ -124,7 +129,19 @@ class RealTimeClock : public PollingComponent {
   ESPTime utcnow() { return ESPTime::from_epoch_utc(this->timestamp_now()); }
 
   /// Get the current time as the UTC epoch since January 1st 1970.
-  time_t timestamp_now() { return ::time(nullptr); }
+  time_t timestamp_now() {
+#ifdef USE_ZEPHYR
+    uint64_t now;
+    int result = timeutil_sync_ref_from_local(&_sync_state, k_uptime_get(), &now);
+    if (result != 0){
+      return 0;
+    } else {
+      return now;
+    }
+#else
+    return ::time(nullptr);
+#endif
+  }
 
   void call_setup() override;
 
@@ -140,6 +157,22 @@ class RealTimeClock : public PollingComponent {
   void apply_timezone_();
 
   CallbackManager<void()> time_sync_callback_;
+
+#ifdef USE_ZEPHYR
+  timeutil_sync_config _sync_config = {1, CONFIG_SYS_CLOCK_TICKS_PER_SEC };
+  timeutil_sync_state _sync_state = {
+    .cfg = &_sync_config,
+    .base = (timeutil_sync_instant) {
+      .ref = 0,
+      .local = 0
+    },
+    .latest = (timeutil_sync_instant) {
+      .ref = 0,
+      .local = 0
+    },
+    .skew = 0
+  };
+#endif
 };
 
 template<typename... Ts> class TimeHasTimeCondition : public Condition<Ts...> {

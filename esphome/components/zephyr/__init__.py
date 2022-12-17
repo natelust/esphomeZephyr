@@ -37,7 +37,9 @@ def set_core_data(config):
                                                          config[FLASH_ARGS])
 
     now = datetime.now()
-    version = f"{now.year-2000}.{now.month}.{now.day}+{now.hour if now.hour !=0 else ''}{now.minute:02d}{now.second:02d}"
+    hour = now.hour if now.hour != 0 else ''
+    minute = f"{now.minute:02d}" if hour else now.minute
+    version = f"{now.year-2000}.{now.month}.{now.day}+{hour}{minute}{now.second:02d}"
     manager.add_Kconfig_vec((
         ("CONFIG_CPLUSPLUS", "y"),
         ("CONFIG_NEWLIB_LIBC", "y"),
@@ -182,7 +184,8 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(ZEPHYR_BASE): cv.string_strict,
             cv.Optional(CONF_FRAMEWORK, default={}): ZEPHYR_FRAMEWORK_SCHEMA,
             cv.Optional(KCONFIG_KEY, default={}): cv.Any(dict),
-            cv.Required(FLASH_ARGS): cv.string_strict
+            cv.Required(FLASH_ARGS): cv.string_strict,
+            cv.Optional("loop_interval", default=16): int,
         }
     ),
     set_core_data
@@ -199,3 +202,5 @@ async def to_code(config):
     cg.add_define("ESPHOME_BOARD", "Zephyr")
 
     cg.add_define("USE_ZEPHYR")
+    if "loop_interval" in config:
+        cg.add(cg.App.set_loop_interval(config["loop_interval"]))

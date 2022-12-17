@@ -87,6 +87,12 @@ class AdafruitFeatherNrf52840(NRF52840Base):
             #writeoc = "pp";
             #readoc = "fastread";
             #writeoc = "pp";
+            #quad-enable-bit = < 9 >;
+            #quad-enable-requirements = "S2B1v6";
+
+            #readoc = "read4o";
+            #writeoc = "pp4o";
+            #quad-enable-bit-mask = < 512 >;
     def flash_mapping(self) -> str:
         mapping = dedent("""
         /delete-node/ &slot1_partition;
@@ -96,9 +102,6 @@ class AdafruitFeatherNrf52840(NRF52840Base):
         };
 
         &gd25q16 {
-            readoc = "read4o";
-            writeoc = "pp4o";
-            quad-enable-bit = < 9 >;
             partitions {
                 compatible = "fixed-partitions";
                 #address-cells = <1>;

@@ -39,34 +39,34 @@ def net_upload(bootloader: bool, proj_dir: os.PathLike, address:str) -> Union[in
                       "image",
                       "upload",
                       "-e",
-                      f"{os.path.join(proj_dir, 'build', 'zephyr' '/zephyr.signed.bin')}"
+                      f"{os.path.join(proj_dir, 'build', 'zephyr' '/zephyr.signed.confirmed.bin')}"
                       ]
         result = run_external_process(*flash_args)
         if result != 0:
             return result
-        list_args = ["mcumgr",
-                     "--conntype",
-                     "udp",
-                     f"--connstring=[{address}]:1337",
-                     "image",
-                     "list",
-                     ]
-        command = subprocess.run(list_args, capture_output=True)
-        if command.returncode != 0:
-            return command.returncode
-        output = command.stdout.decode()
-        hashes = re.findall(r"^.*hash[:] ([A-Za-z0-9]*)$", output, re.MULTILINE)
-        confirm_args = ["mcumgr",
-                        "--conntype",
-                        "udp",
-                        f"--connstring=[{address}]:1337",
-                        "image",
-                        "confirm",
-                        f"{hashes[-1]}"
-                        ]
-        value = run_external_process(*confirm_args)
-        if value != 0:
-            return value
+        #list_args = ["mcumgr",
+        #             "--conntype",
+        #             "udp",
+        #             f"--connstring=[{address}]:1337",
+        #             "image",
+        #             "list",
+        #             ]
+        #command = subprocess.run(list_args, capture_output=True)
+        #if command.returncode != 0:
+        #    return command.returncode
+        #output = command.stdout.decode()
+        #hashes = re.findall(r"^.*hash[:] ([A-Za-z0-9]*)$", output, re.MULTILINE)
+        #confirm_args = ["mcumgr",
+        #                "--conntype",
+        #                "udp",
+        #                f"--connstring=[{address}]:1337",
+        #                "image",
+        #                "confirm",
+        #                f"{hashes[-1]}"
+        #                ]
+        #value = run_external_process(*confirm_args)
+        #if value != 0:
+        #    return value
         restart_args = ["mcumgr",
                         "--conntype",
                         "udp",

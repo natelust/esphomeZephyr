@@ -1,6 +1,6 @@
 #include "real_time_clock.h"
 #include "esphome/core/log.h"
-#include "lwip/opt.h"
+//#include "lwip/opt.h"
 #ifdef USE_ESP8266
 #include "sys/time.h"
 #endif
@@ -16,11 +16,16 @@ static const char *const TAG = "time";
 
 RealTimeClock::RealTimeClock() = default;
 void RealTimeClock::call_setup() {
+#ifndef USE_ZEPHYR
+  setenv("TZ", this->timezone_.c_str(), 1);
+  tzset();
+#endif
   this->apply_timezone_();
   PollingComponent::call_setup();
 }
 void RealTimeClock::synchronize_epoch_(uint32_t epoch) {
   // Update UTC epoch time.
+#ifndef USE_ZEPHYR
   struct timeval timev {
     .tv_sec = static_cast<time_t>(epoch), .tv_usec = 0,
   };
@@ -39,6 +44,21 @@ void RealTimeClock::synchronize_epoch_(uint32_t epoch) {
   if (ret != 0) {
     ESP_LOGW(TAG, "setimeofday() failed with code %d", ret);
   }
+#else
+  timeutil_sync_instant inst = {
+    .ref = epoch,
+    .local = (uint64_t) k_uptime_get()
+  };
+  int ret = timeutil_sync_state_update(&_sync_state, &inst);
+  if (ret != 0) {
+    ESP_LOGW(TAG, "syncing time failed with code %d", ret);
+  }
+  float skew = timeutil_sync_estimate_skew(&_sync_state);
+  ret = timeutil_sync_state_set_skew(&_sync_state, skew, nullptr);
+  if (ret != 0) {
+    ESP_LOGW(TAG, "syncing skew failed with code %d", ret);
+  }
+#endif
 
   auto time = this->now();
   ESP_LOGD(TAG, "Synchronized time: %04d-%02d-%02d %02d:%02d:%02d", time.year, time.month, time.day_of_month, time.hour,

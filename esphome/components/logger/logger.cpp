@@ -143,7 +143,7 @@ void HOT Logger::log_message_(int level, const char *tag, int offset) {
 #ifdef USE_ZEPHYR
   //printk("%s", msg);
   //printk("\n");
-  LOG_INF("%s\n", msg);
+  LOG_WRN("%s\n", msg);
 #endif
   }
 

@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 # Note, there are other pads on the bottom that are not added here yet
 pinMapping = {
     "P0.13": (GPIO_0, 13),
-    "P0.16": (GPIO_0, 16),
+    "P0.15": (GPIO_0, 15),
     "P0.17": (GPIO_0, 17),
     "P0.20": (GPIO_0, 20),  # UART TX
-    "P0.22": (GPIO_0, 22),  #QSPI
+    "P0.22": (GPIO_0, 22),  # QSPI
     "P0.24": (GPIO_0, 24),  # UART RX
     "P1.00": (GPIO_1, 0),  # QSPI, TRACEDATA, Serial wire out (SWO)
     "P0.09": (GPIO_0, 9),  # NFC1 NFC antenna connection
@@ -97,22 +97,22 @@ class NRF52840Dongle(NRF52840Base):
             """)
         return mapping
 
-    """
     def pre_compile_bootloader(self, args: List[str]) -> List[str]:
-        args.extend(["-DCONFIG_LOG=y",
-                     "-DCONFIG_DEBUG=n",
-                     "-DCONFIG_MBEDTLS_AES_ROM_TABLES=n",
-                     "-DCONFIG_BOOT_UPGRADE_ONLY=y",
-                     "-DCONFIG_UART_CONSOLE=y",
-                     "-DCONFIG_CONSOLE=y",
+        args.extend([
+            "-DCONFIG_BOOT_ERASE_PROGRESSIVELY=n",
+            "-DCONFIG_BOOT_UPGRADE_ONLY=y",
+            #"-DCONFIG_LOG=y",
+            #         "-DCONFIG_DEBUG=n",
+            #         "-DCONFIG_MBEDTLS_AES_ROM_TABLES=n",
+            #         "-DCONFIG_UART_CONSOLE=y",
+            #         "-DCONFIG_CONSOLE=y",
         ])
         return args
 
-    """
     def pre_compile_application(self, args: List[str]) -> List[str]:
         # Flash space is at a premium, dont use space for zephyr log strings,
         # except critical ones
-        args.extend(['--', '-DCONFIG_LOG_MAX_LEVEL=1'])
+        args.extend(['--', '-DCONFIG_LOG_MAX_LEVEL=2'])
         return args
 
     @property
@@ -133,7 +133,7 @@ class NRF52840Dongle(NRF52840Base):
         if kwargs['scl'] not in pinMapping:
             raise cv.Invalid(f"{kwargs['scl']} is not a valid pin identifier")
         hardware, device = super().i2c_arg_parser(kwargs)
-        
+
         return hardware, device
 
     def get_writer(self) -> ZephyrDirectoryBuilder:
@@ -142,7 +142,7 @@ class NRF52840Dongle(NRF52840Base):
     def upload(self, flash_args: str, boot_dir: os.PathLike,
                proj_dir: os.PathLike, boot_info_path: os.PathLike,
                bootloader: bool, host: str):
-        if  which("mcumgr") is None or which("nrfutil") is None:
+        if which("mcumgr") is None or which("nrfutil") is None:
             raise ValueError(f"mcumgr and nrfutil must be installed to upload to {self}")
         if not bootloader:
             args = ["nrfutil",
@@ -168,7 +168,7 @@ class NRF52840Dongle(NRF52840Base):
                             "-p",
                             f"{host}",
                             "-b",
-                            "115200"]
+                            "1000000"]
             result = run_external_process(*install_args)
             if result != 0:
                 print("Uploading boot image failed, is your device in reset mode")
@@ -181,6 +181,7 @@ class NRF52840Dongle(NRF52840Base):
 
         print("### FLASHING APPLICATION #####")
                       #f"--connstring=dev={host},baud=115200",
+                      #f"--connstring=dev={host},baud=115200,mtu=512",
         image_args = ["mcumgr",
                       "--conntype=serial",
                       f"--connstring=dev={host},baud=115200,mtu=512",
@@ -195,12 +196,11 @@ class NRF52840Dongle(NRF52840Base):
             return result
 
         restart_args = ["mcumgr",
-                      "--conntype=serial",
-                      f"--connstring=dev={host},baud=115200",
-                      "reset"
-                      ]
+                        "--conntype=serial",
+                        f"--connstring=dev={host},baud=115200",
+                        "reset"
+                        ]
         result = run_external_process(*restart_args)
         if result != 0:
             print("Failed to restart device through serial connection")
         return result
-        
