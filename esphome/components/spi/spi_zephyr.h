@@ -1,7 +1,7 @@
 #pragma once
 #ifdef USE_ZEPHYR
 
-#include <drivers/spi.h>
+#include <zephyr/drivers/spi.h>
 #include <string>
 
 #include "esphome/core/log.h"

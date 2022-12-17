@@ -1,6 +1,7 @@
 from abc import abstractmethod
 import textwrap
 from typing import Tuple, Mapping
+from itertools import count
 
 from ..baseBoard import BaseZephyrBoard
 from .. import registry
@@ -15,6 +16,7 @@ class NRF52840Base(BaseZephyrBoard):
     def __init__(self, mangager, *args, **kwargs) -> None:
         super().__init__(mangager)
         self.hardware_i2c_devices = ["i2c0"]
+        self.pin_control_counter = count()
 
     @property
     @abstractmethod
@@ -64,22 +66,38 @@ class NRF52840Base(BaseZephyrBoard):
 
     def i2c_hardware_handler(self, device: str, kwargs):
         updated_i2c_dev = textwrap.dedent("""
-        &{} {{
-            clock-frequency = < {} >;
-            sda-pin = < {} >;
-            scl-pin = < {} >;
+        &{device} {{
+            clock-frequency = < {freq} >;
             status =  "ok" ;
+            pinctrl-0 = <&{device}_default_alt>;
+            pinctrl-1 = <&{device}_sleep_alt>;
+            pinctrl-names = "default", "sleep";
+        }};
+        &pinctrl {{
+            {device}_default_alt: {device}_default_alt{{
+                group1 {{
+                    psels = <NRF_PSEL(TWIM_SDA, {sda_controller}, {sda_pin})>,
+                            <NRF_PSEL(TWIM_SCL, {scl_controller}, {scl_pin})>;
+                }};
+            }};
+            {device}_sleep_alt: {device}_sleep_alt{{
+                group1 {{
+                    psels = <NRF_PSEL(TWIM_SDA, {sda_controller}, {sda_pin})>,
+                            <NRF_PSEL(TWIM_SCL, {scl_controller}, {scl_pin})>;
+                    low-power-enable;
+                }};
+            }};
         }};
         """)
         sda_controller, sda_pin = self.get_device_and_pin(pin=kwargs['sda'])
-        if sda_controller == GPIO_1:
-            sda_pin += 32
         scl_controller, scl_pin = self.get_device_and_pin(pin=kwargs['scl'])
-        if scl_controller == GPIO_1:
-            scl_pin += 32
 
-        updated_i2c_dev = updated_i2c_dev.format(device, int(kwargs['frequency']),
-                                                    sda_pin, scl_pin)
+        updated_i2c_dev = updated_i2c_dev.format(device=device,
+                                                 freq=int(kwargs['frequency']),
+                                                 sda_controller=sda_controller.replace("gpio", ""),
+                                                 sda_pin=sda_pin,
+                                                 scl_controller=scl_controller.replace("gpio", ""),
+                                                 scl_pin=scl_pin)
         self._manager.device_overlay_list.append(updated_i2c_dev)
         return (device, kwargs['sda'], kwargs['scl'])
 
@@ -99,9 +117,51 @@ class NRF52840Base(BaseZephyrBoard):
         result = {}
         for name, pointer in (("clk", clk), ("mosi", mosi), ("miso", miso)):
             controller, pin = self.get_device_and_pin(pointer)
-            if controller == GPIO_1:
-                pin += 32
-            result[name] = pin
+            result[name] = (controller, pin)
+        return result
+
+    def handle_spi(self, **kwargs) -> Mapping[str, str]:
+        clk_pin = kwargs.get("clk_pin")
+        mosi_pin = kwargs.get("mosi_pin")
+        miso_pin = kwargs.get("miso_pin")
+        pins = self.spi_pins(clk=clk_pin['number'] if clk_pin is not None else None,
+                             mosi=mosi_pin['number'] if mosi_pin is not None else None,
+                             miso=miso_pin['number'] if miso_pin is not None else None)
+
+        updated_spi_dev = textwrap.dedent("""
+        &{device}  {{
+            pinctrl-0 = <&{device}_default_alt>;
+            pinctrl-1 = <&{device}_sleep_alt>;
+            pinctrl-names = "default", "sleep";
+        }};
+        &pinctrl {{
+            {device}_default_alt: {device}_default_alt{{
+                group1 {{
+                    psels = <NRF_PSEL(SPIM_SCK, {sck_controller}, {sck_pin})>,
+                            <NRF_PSEL(SPIM_MOSI, {mosi_controller}, {mosi_pin})>,
+                            <NRF_PSEL(SPIM_MISO, {miso_controller}, {miso_pin})>;
+                }};
+            }};
+            {device}_sleep_alt: {device}_sleep_alt{{
+                group1 {{
+                    psels = <NRF_PSEL(SPIM_SCK, {sck_controller}, {sck_pin})>,
+                            <NRF_PSEL(SPIM_MOSI, {mosi_controller}, {mosi_pin})>,
+                            <NRF_PSEL(SPIM_MISO, {miso_controller}, {miso_pin})>;
+                    low-power-enable;
+                }};
+            }};
+        }};
+        """)
+        updated_spi_dev = updated_spi_dev.format(device=self.spi_device(),
+                                                 sck_pin=pins['clk'][1],
+                                                 sck_controller=pins['clk'][0].replace("gpio", ""),
+                                                 mosi_pin=pins['mosi'][1],
+                                                 mosi_controller=pins['mosi'][0].replace("gpio", ""),
+                                                 miso_pin=pins['miso'][1],
+                                                 miso_controller=pins['miso'][0].replace("gpio", ""))
+        self._manager.device_overlay_list.append(updated_spi_dev)
+        result = dict(pins.items())
+        result['device'] = self.spi_device()
         return result
 
     def get_analog_channel(self, pin) -> int:

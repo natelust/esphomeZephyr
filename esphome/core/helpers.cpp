@@ -35,8 +35,9 @@
 #endif
 
 #ifdef USE_ZEPHYR
-#include <random/rand32.h>
+#include <zephyr/random/rand32.h>
 #include <strings.h>
+#include <assert.h>
 #endif
 
 namespace esphome {

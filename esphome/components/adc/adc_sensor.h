@@ -6,9 +6,9 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/voltage_sampler/voltage_sampler.h"
 
-//#ifdef USE_ZEPHYR
-#include <drivers/adc.h>
-//#endif
+#ifdef USE_ZEPHYR
+#include <zephyr/drivers/adc.h>
+#endif
 
 #ifdef USE_ESP32
 #include "driver/adc.h"

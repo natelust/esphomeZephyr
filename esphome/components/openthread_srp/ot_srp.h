@@ -4,7 +4,7 @@
 
 #include<string>
 
-#include <net/openthread.h>
+#include <zephyr/net/openthread.h>
 #include <openthread/srp_client.h>
 
 namespace esphome {

@@ -87,7 +87,8 @@ async def to_code(config):
         name, sda, scl = CORE.zephyr_manager.handle_i2c(**config)
         cg.add(var.set_sda_pin(sda))
         cg.add(var.set_scl_pin(scl))
-        cg.add(var.set_device(cg.RawExpression(f'DT_LABEL(DT_NODELABEL({name}))')))
+        #cg.add(var.set_device(cg.RawExpression(f'DT_LABEL(DT_NODELABEL({name}))')))
+        cg.add(var.set_device(cg.RawExpression(f'DT_NODE_FULL_NAME(DT_NODELABEL({name}))')))
 
 
 def i2c_device_schema(default_address):

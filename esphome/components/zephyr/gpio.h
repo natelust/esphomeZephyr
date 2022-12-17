@@ -2,8 +2,8 @@
 
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
-#include <drivers/gpio.h>
-#include <devicetree.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
 #include <vector>
 
 namespace esphome {

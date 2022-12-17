@@ -241,6 +241,7 @@ float ADCSensor::sample() {
   }
   return raw * 3.3f / 4096.0f;
 }
+#endif
 
 #ifdef USE_ZEPHYR
 float ADCSensor::sample() {
@@ -290,7 +291,6 @@ void ADCSensor::set_ref_voltage(float ref_volts) {
       ref_mvolt_ = ref_volts*1000;
       break;
   }
->>>>>>> 9d77b743 (Add support for Adc component)
 }
 #endif
 

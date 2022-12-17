@@ -128,6 +128,10 @@ ErrorCode ZephyrI2CBus::writev(uint8_t address, WriteBuffer *buffers, size_t cnt
     return transfer_<WriteBuffer *, I2C_MSG_WRITE>(address, buffers, cnt);
 }
 
+ErrorCode ZephyrI2CBus::writev(uint8_t address, WriteBuffer *buffers, size_t cnt, bool stop) {
+    return transfer_<WriteBuffer *, I2C_MSG_WRITE>(address, buffers, cnt);
+}
+
 template<typename T, unsigned int I>
 ErrorCode ZephyrI2CBus::transfer_(uint8_t address, T buffers, size_t cnt) {
     i2c_msg * msgs = new i2c_msg[cnt];

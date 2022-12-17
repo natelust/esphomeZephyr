@@ -68,7 +68,7 @@ async def zephyr_pin_to_code(config):
     num = config[CONF_NUMBER]
     assert CORE.zephyr_manager is not None
     gpio_port, gpio_pin = CORE.zephyr_manager.board.get_device_and_pin(num)
-    cg.add(var.set_device_label(cg.RawExpression(f"DT_LABEL(DT_NODELABEL({gpio_port}))")))
+    cg.add(var.set_device_label(cg.RawExpression(f"DT_NODE_FULL_NAME(DT_NODELABEL({gpio_port}))")))
     cg.add(var.set_pin(gpio_pin))
     cg.add(var.set_inverted(config[CONF_INVERTED]))
     cg.add(var.set_flags(pins.gpio_flags_expr(config[CONF_MODE])))

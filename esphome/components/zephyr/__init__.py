@@ -60,8 +60,8 @@ def set_core_data(config):
         #('CONFIG_THREAD_MONITOR', 'y'),
         #('CONFIG_THREAD_NAME', 'y'),
         #('CONFIG_LOG_BUFFER_SIZE', 32768),
-        ('CONFIG_LOG_STRDUP_BUF_COUNT', 300),
-        ('CONFIG_LOG_STRDUP_MAX_STRING', 100),
+        #('CONFIG_LOG_STRDUP_BUF_COUNT', 300),
+        #('CONFIG_LOG_STRDUP_MAX_STRING', 100),
         #('CONFIG_UART_CONSOLE_INIT_PRIORITY', 95),
         ('CONFIG_FPU', 'y'),
     #Kconfigs["CONFIG_UART_CONSOLE_ON_DEV_NAME"] = '"CDC_ACM_0"'
@@ -79,7 +79,7 @@ def set_core_data(config):
         ('CONFIG_SHELL_TAB', "y"),
         ('CONFIG_SHELL_TAB_AUTOCOMPLETION', "y"),
         ('CONFIG_SHELL_METAKEYS', "n"),
-        ("CONFIG_NET_BUF_USER_DATA_SIZE", 24),
+        #("CONFIG_NET_BUF_USER_DATA_SIZE", 24),
         ("CONFIG_SHELL_MINIMAL", "y"),
         ("CONFIG_DEBUG", "n"),
         ("CONFIG_BOOT_BANNER", "n"),
@@ -194,11 +194,11 @@ CONFIG_SCHEMA = cv.All(
 
 @coroutine_with_priority(1000)
 async def to_code(config):
-    cg.add_global(cg.RawStatement("#include <zephyr.h>"))
-    cg.add_global(cg.RawStatement("#include <sys/printk.h>"))
-    cg.add_global(cg.RawStatement("#include <usb/usb_device.h>"))
-    cg.add_global(cg.RawStatement("#include <sys/util.h>"))
-    cg.add_global(cg.RawStatement("#include <drivers/uart.h>"))
+    cg.add_global(cg.RawStatement("#include <zephyr/kernel.h>"))
+    cg.add_global(cg.RawStatement("#include <zephyr/sys/printk.h>"))
+    cg.add_global(cg.RawStatement("#include <zephyr/usb/usb_device.h>"))
+    cg.add_global(cg.RawStatement("#include <zephyr/sys/util.h>"))
+    cg.add_global(cg.RawStatement("#include <zephyr/drivers/uart.h>"))
     cg.add_define("ESPHOME_BOARD", "Zephyr")
 
     cg.add_define("USE_ZEPHYR")

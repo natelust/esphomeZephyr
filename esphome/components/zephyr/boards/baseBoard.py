@@ -101,29 +101,12 @@ class BaseZephyrBoard(ABC):
         """
         raise NotImplementedError("Not implemented on the base class")
 
+    @abstractmethod
     def handle_spi(self, **kwargs) -> Mapping[str, str]:
-        clk_pin = kwargs.get("clk_pin")
-        mosi_pin = kwargs.get("mosi_pin")
-        miso_pin = kwargs.get("miso_pin")
-        pins = self.spi_pins(clk = clk_pin['number'] if clk_pin is not None else None,
-                             mosi = mosi_pin['number'] if mosi_pin is not None else None,
-                             miso = miso_pin['number'] if miso_pin is not None else None)
-
-        updated_spi_dev = textwrap.dedent("""
-        &{device}  {{
-          sck-pin = < {sck} >;
-          mosi-pin = < {mosi} >;
-          miso-pin = < {miso} >;
-        }};
-        """)
-        updated_spi_dev = updated_spi_dev.format(device=self.spi_device(),
-                                                 sck=pins['clk'],
-                                                 mosi=pins['mosi'],
-                                                 miso=pins['miso'])
-        self._manager.device_overlay_list.append(updated_spi_dev)
-        result = dict(pins.items())
-        result['device'] = self.spi_device()
-        return result
+        """This method is responsible for handling creating the appropriate
+        devicetree overloads.
+        """
+        raise NotImplementedError("Not implemented on the base class")
 
     @abstractmethod
     def adc_arg_validator(self, **kwargs) -> None:

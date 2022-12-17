@@ -4,8 +4,8 @@
 #include "esphome/core/helpers.h"
 #include "preferences.h"
 
-#include <kernel.h>
-#include <sys/reboot.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/reboot.h>
 
 namespace esphome {
 void yield() { k_yield(); }
@@ -18,7 +18,7 @@ void arch_restart() {
 }
 void arch_feed_wdt() {}
 uint8_t progmem_read_byte(const uint8_t *addr) { return *addr; }
-}
+
 uint32_t arch_get_cpu_cycle_count() {
     return k_uptime_ticks();
 }
@@ -29,4 +29,6 @@ void force_link_symbols() {}
 
 void resetPins() {}
 
+void arch_init() {}
+}
 //#endif

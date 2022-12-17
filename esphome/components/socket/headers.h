@@ -115,7 +115,7 @@ struct iovec {
 #include <fcntl.h>
 
 #ifdef USE_ZEPHYR
-#include <posix/sys/ioctl.h>
+#include <zephyr/posix/sys/ioctl.h>
 #else
 #include <sys/ioctl.h>
 #endif
@@ -131,7 +131,7 @@ struct iovec {
 #endif
 
 #ifdef USE_ZEPHYR
-#include <posix/unistd.h>
+#include <zephyr/posix/unistd.h>
 #else
 #include <unistd.h>
 #endif

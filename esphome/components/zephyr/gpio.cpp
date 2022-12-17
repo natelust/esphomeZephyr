@@ -1,5 +1,5 @@
 #include "gpio.h"
-#include <sys/util.h>
+#include <zephyr/sys/util.h>
 #include "esphome/core/log.h"
 
 namespace esphome {

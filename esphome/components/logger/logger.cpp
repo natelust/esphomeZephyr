@@ -11,7 +11,7 @@
 
 #ifdef USE_ZEPHYR
 //#include <sys/printk.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(esphome);
 #endif
 

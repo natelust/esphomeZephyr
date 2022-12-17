@@ -66,7 +66,7 @@ async def to_code(config):
         cg.add(var.set_miso_name("'{}'".format(result['miso'])))
         cg.add(var.set_mosi_name("'{}'".format(result['mosi'])))
         cg.add(var.set_clk_name("'{}'".format(result['clk'])))
-        cg.add(var.set_device(cg.RawExpression(f'DT_LABEL(DT_NODELABEL({result["device"]}))')))
+        cg.add(var.set_device(cg.RawExpression(f'DT_NODE_FULL_NAME(DT_NODELABEL({result["device"]}))')))
 
 
 """

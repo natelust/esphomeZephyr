@@ -169,16 +169,16 @@ class ZephyrDirectoryBuilder:
             #const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 def add_zephyr_main(text: str) -> str:
     text += AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
-    text += dedent(r"""#include <mgmt/mcumgr/smp_udp.h>
-#include <net/net_mgmt.h>
-#include <net/net_event.h>
-#include <net/net_conn_mgr.h>
+    text += dedent(r"""#include <zephyr/mgmt/mcumgr/transport/smp_udp.h>
+#include <zephyr/net/net_mgmt.h>
+#include <zephyr/net/net_event.h>
+#include <zephyr/net/net_conn_mgr.h>
 
 #define LOG_LEVEL LOG_LEVEL_DBG
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
-#include "img_mgmt/img_mgmt.h"
-#include "os_mgmt/os_mgmt.h"
+#include "zephyr/mgmt/mcumgr/grp/img_mgmt/img_mgmt.h"
+#include "zephyr/mgmt/mcumgr/grp/os_mgmt/os_mgmt.h"
 
 LOG_MODULE_REGISTER(smp_udp_sample);
 
@@ -216,14 +216,14 @@ void start_smp_udp(void)
 	net_mgmt_add_event_callback(&mgmt_cb);
 	net_conn_mgr_resend_status();
 }
-        void main(void)
+        int main(void)
         {
             const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
 
             uint32_t dtr = 0;
 
             if (!device_is_ready(dev) || usb_enable(NULL)) {
-                return;
+                return 1;
             }
 
             /* Poll if the DTR flag was set */
@@ -244,6 +244,7 @@ void start_smp_udp(void)
             while (1) {
                 loop();
             }
+            return 0;
         }
         """)
     # This bit is for openthread, refactor this all later

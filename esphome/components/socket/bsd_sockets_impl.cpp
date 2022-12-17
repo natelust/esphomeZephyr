@@ -12,7 +12,7 @@
 #endif
 
 #ifdef USE_ZEPHYR
-#include <net/socket.h>
+#include <zephyr/net/socket.h>
 #define 	MSG_MORE   0x8000
 #endif
 /*

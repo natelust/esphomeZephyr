@@ -233,7 +233,8 @@ async def to_code(config):
         cg.add(var.set_gain(cg.RawExpression(config[CONF_GAIN].enum_value)))
         cg.add(var.set_reference(cg.RawExpression(config[CONF_REF].enum_value)))
         cg.add(var.set_resolution(config[CONF_RESOLUTION]))
-        cg.add(var.set_device(cg.RawExpression(f"DT_LABEL(DT_NODELABEL({device_name}))")))
+        #cg.add(var.set_device(cg.RawExpression(f"DT_LABEL(DT_NODELABEL({device_name}))")))
+        cg.add(var.set_device(cg.RawExpression(f"DT_NODE_FULL_NAME(DT_NODELABEL({device_name}))")))
         cg.add(var.set_ref_voltage(config[CONF_VOLTAGE]))
     else:
         if config[CONF_PIN] == "VCC":

@@ -1,9 +1,9 @@
 #pragma once
 #include "i2c_bus.h"
 #include "esphome/core/component.h"
-#include <drivers/i2c.h>
+#include <zephyr/drivers/i2c.h>
 #include <string>
-#include <devicetree.h>
+#include <zephyr/devicetree.h>
 
 namespace esphome {
 namespace i2c {
@@ -27,6 +27,7 @@ class ZephyrI2CBus : public I2CBus, public Component {
 
     ErrorCode write(uint8_t address, const uint8_t *buffer, size_t len);
     ErrorCode writev(uint8_t address, WriteBuffer *buffers, size_t cnt);
+    ErrorCode writev(uint8_t address, WriteBuffer *buffers, size_t cnt, bool stop);
 
     void set_device(std::string device) {this->device = device_get_binding(device.c_str());}
     void set_sda_pin(std::string sda_pin) { sda_pin_ = sda_pin; }
