@@ -597,6 +597,8 @@ class EsphomeCore:
     @property
     def is_rp2040(self):
         return self.target_platform == "rp2040"
+
+    @property
     def is_zephyr(self):
         return self.target_platform == "zephyr"
 
