@@ -60,8 +60,9 @@ class AdafruitEPaper : public PollingComponent,
     virtual void power_down() = 0;
     virtual void update_display();
     virtual void start_write(Buffer buf_number) = 0;
-    virtual void setRAMAddress(uint16_t x, uint16_t y) = 0;
-    //virtual uint8_t * get_buffer_from_number(Buffer buf_num) = 0;
+    virtual void set_ram_address(uint16_t x, uint16_t y) = 0;
+    virtual bool is_black(Color color) = 0;
+    virtual bool is_color(Color color) = 0;
 
     // class members
     GPIOPin *reset_pin_ = nullptr;

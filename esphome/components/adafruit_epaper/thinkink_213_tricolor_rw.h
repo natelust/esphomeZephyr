@@ -2,7 +2,7 @@
 
 #include "adafruit_epaper.h"
 
-//#ifdef USE_THINKINK_213_TRICOLOR_RW
+#ifdef USE_THINKINK_213_TRICOLOR_RW
 #include "ssd1680.h"
 
 #define THINKINK_213_TRICOLOR_RW_WIDTH 250
@@ -104,7 +104,7 @@ class ThinkInk_213_Tricolor_RW :
         }
     }
 
-    void setRAMAddress(uint16_t x, uint16_t y) {
+    void set_ram_address(uint16_t x, uint16_t y) {
         ESP_LOGD(THINKINK_213_TAG, "Setting Ram Address");
         (void)x;
         (void)y;
@@ -120,8 +120,20 @@ class ThinkInk_213_Tricolor_RW :
         buf[1] = 0;
         command(SSD1680_SET_RAMYCOUNT, buf, 2);
     }
+
+    bool is_color(Color color) override {
+        if (color.r > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool is_black(Color color) override {
+        return (color.r <= 120) && (color.g == 0) && (color.b == 0);
+    }
 };
 
 } // namespace adafruit_epaper
 } // namespace esphome
-//#endif
+#endif

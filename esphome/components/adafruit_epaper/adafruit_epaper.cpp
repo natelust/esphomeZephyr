@@ -29,18 +29,9 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::setup() {
 
     this->clear_buffers();
     this->cs_->digital_write(true);
-    //this->init_commands();
     this->hardware_reset();
 
-    /*
-    for (int i = 30 ; i < 61; i++ ) {
-        for (int j = 30; j < 61; j++)
-            draw_absolute_pixel_internal(i, j, Color(1, 0, 0));
-    }
-    */
-    //this->display();
-    //this->clear();
-    //this->power_down();
+    this->power_down();
 }
 
 template <int WIDTH, int HEIGHT, bool COLOR>
@@ -59,16 +50,15 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::write_framebuffer_to_display(Buffer b
         this->write_byte(data);
         this->disable();
     }
-    //this->disable();
 }
 
 template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::display() {
     this->power_up();
-    this->setRAMAddress(0, 0);
+    this->set_ram_address(0, 0);
     this->write_framebuffer_to_display(Buffer::BLACK, false);
     if (COLOR) {
-        this->setRAMAddress(0, 0);
+        this->set_ram_address(0, 0);
         this->write_framebuffer_to_display(Buffer::COLOR, false);
     }
     this->update_display();
@@ -89,11 +79,12 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::clear_buffers() {
 
 template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::clear() {
+    ESP_LOGD(TAG, "clearing display");
     clear_buffers();
-    display();
-    delay(100);
+    //display();
+    //delay(100);
     // do it again to remove ghosts
-    display();
+    //display();
 }
 
 template <int WIDTH, int HEIGHT, bool COLOR>
@@ -176,12 +167,9 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::hardware_reset() {
 template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::draw_absolute_pixel_internal(int x, int y, Color color){
     if ( x >= WIDTH || y >= HEIGHT) {
-        ESP_LOGE(TAG, "got pixel data, above bounds");
         return;
-
     }
     if ( x < 0 || y < 0 ) {
-        ESP_LOGE(TAG, "got pixel data, below bounds");
         return;
     }
     
@@ -190,21 +178,16 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::draw_absolute_pixel_internal(int x, i
     uint8_t * black_buf_off = this->black_buffer + offset;
     uint8_t * color_buf_off = this->color_buffer + offset;
 
-    bool is_black = (color.r == 0) && (color.g == 0) && (color.b == 0);
-    if (is_black) {
-        if (!this->invert_black_color[Buffer::BLACK]) {
+    if (this->is_black(color)) {
+        if (this->invert_black_color[Buffer::BLACK]) {
             *black_buf_off &= ~(1 << (7 - y % 8));
         } else {
             *black_buf_off |= (1 << (7 - y % 8));
         }
     }
     
-    static uint8_t counter = 0;
-
     if (COLOR) {
-        //bool is_red = color.r > 0;
-        bool is_red = color.is_on();
-        if (is_red) {
+        if (this->is_color(color)) {
             if (!this->invert_black_color[Buffer::COLOR]) {
                 *color_buf_off |= (1 << (7 - y % 8));
             } else {
@@ -216,7 +199,12 @@ void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::draw_absolute_pixel_internal(int x, i
 
 template <int WIDTH, int HEIGHT, bool COLOR>
 void AdafruitEPaper<WIDTH, HEIGHT, COLOR>::update() {
-    this->do_update_();
+    this->clear();
+    if (this->page_ != nullptr) {
+        this->page_->get_writer()(*this);
+    } else if (this->writer_.has_value()) {
+        (*this->writer_)(*this);
+    }
     this->display();
 }
 

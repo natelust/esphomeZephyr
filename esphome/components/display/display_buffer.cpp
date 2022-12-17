@@ -25,7 +25,10 @@ void DisplayBuffer::init_internal_(uint32_t buffer_length) {
   this->clear();
 }
 void DisplayBuffer::fill(Color color) { this->filled_rectangle(0, 0, this->get_width(), this->get_height(), color); }
-void DisplayBuffer::clear() { this->fill(COLOR_OFF); }
+void DisplayBuffer::clear() { 
+  ESP_LOGD(TAG, "in display buffer base");
+  this->fill(COLOR_OFF);
+  }
 int DisplayBuffer::get_width() {
   switch (this->rotation_) {
     case DISPLAY_ROTATION_90_DEGREES:

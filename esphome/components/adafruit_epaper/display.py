@@ -8,7 +8,9 @@ from esphome.const import (
     CONF_ID,
     CONF_LAMBDA,
     CONF_MODEL,
+    CONF_OUTPUT,
     CONF_PAGES,
+    CONF_PULLUP,
     CONF_RESET_PIN,
 )
 
@@ -31,7 +33,10 @@ CONFIG_SCHEMA = cv.All(
     display.FULL_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(AdafruitEPaper),
-            cv.Required(CONF_DC_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_DC_PIN): pins._schema_creator({
+                CONF_OUTPUT: True,
+                CONF_PULLUP: True
+            }),
             cv.Required(CONF_MODEL): cv.one_of(*MODELS),
             cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_BUSY_PIN): pins.gpio_output_pin_schema
