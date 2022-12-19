@@ -232,6 +232,7 @@ async def to_code(config):
             ("CONFIG_LOG_PRINTK", "y"),
             ("CONFIG_SHELL_LOG_BACKEND", "y"),
         ))
+        cg.add_define("ESPHOME_LOG_LEVEL", cg.RawExpression(str(LOG_LEVELS[level])))
 
     # Register at end for safe mode
     await cg.register_component(log, config)

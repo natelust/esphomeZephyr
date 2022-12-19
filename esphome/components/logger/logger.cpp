@@ -10,7 +10,7 @@
 #endif  // USE_ESP32_FRAMEWORK_ARDUINO || USE_ESP_IDF
 
 #ifdef USE_ZEPHYR
-//#include <sys/printk.h>
+#include <zephyr/sys/printk.h>
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(esphome);
 #endif
