@@ -93,6 +93,7 @@ class ZephyrDirectoryBuilder:
     def createProjFile(self) -> None:
         self.manager.add_Kconfig_vec((
             ("CONFIG_BOOTLOADER_MCUBOOT", "y"),
+            ("CONFIG_PRINTK", "y"),
             ('CONFIG_MCUBOOT_SIGNATURE_KEY_FILE', f'"{self.key_file}"'),
         ))
         result = '\n'.join(f"{key}={value}"
@@ -169,7 +170,7 @@ class ZephyrDirectoryBuilder:
             #const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 def add_zephyr_main(text: str) -> str:
     text += AUTO_GEN_ZEPHYR_MAIN_BEGIN + "\n"
-    text += dedent(r"""#include <zephyr/mgmt/mcumgr/transport/smp_udp.h>
+    text += dedent(r"""#include <zephyr/mgmt/mcumgr/smp_udp.h>
 #include <zephyr/net/net_mgmt.h>
 #include <zephyr/net/net_event.h>
 #include <zephyr/net/net_conn_mgr.h>
@@ -177,10 +178,12 @@ def add_zephyr_main(text: str) -> str:
 #define LOG_LEVEL LOG_LEVEL_DBG
 #include <zephyr/logging/log.h>
 
-#include "zephyr/mgmt/mcumgr/grp/img_mgmt/img_mgmt.h"
-#include "zephyr/mgmt/mcumgr/grp/os_mgmt/os_mgmt.h"
+//#include "zephyr/mgmt/mcumgr/grp/img_mgmt/img_mgmt.h"
+//#include "zephyr/mgmt/mcumgr/grp/os_mgmt/os_mgmt.h"
+#include "img_mgmt/img_mgmt.h"
+#include "os_mgmt/os_mgmt.h"
 
-LOG_MODULE_REGISTER(smp_udp_sample);
+LOG_MODULE_REGISTER(esphome_main);
 
 #define EVENT_MASK (NET_EVENT_L4_CONNECTED | NET_EVENT_L4_DISCONNECTED)
 
@@ -216,37 +219,38 @@ void start_smp_udp(void)
 	net_mgmt_add_event_callback(&mgmt_cb);
 	net_conn_mgr_resend_status();
 }
-        int main(void)
-        {
-            const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
 
-            uint32_t dtr = 0;
+int main(void)
+{
+    const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
 
-            if (!device_is_ready(dev) || usb_enable(NULL)) {
-                return 1;
-            }
+    uint32_t dtr = 0;
 
-            /* Poll if the DTR flag was set */
-            /*
-            while (!dtr) {
-                    uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-                    k_sleep(K_MSEC(100));
+    if (!device_is_ready(dev) || usb_enable(NULL)) {
+        return 1;
+    }
 
-            }
-            */
+    /* Poll if the DTR flag was set */
+    /*
+    while (!dtr) {
+            uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+            k_sleep(K_MSEC(100));
+
+    }
+    */
 //#ifdef USE_ZEPHYR_OTA
-            start_smp_udp();
-            img_mgmt_register_group();
-            os_mgmt_register_group();
+    start_smp_udp();
+    img_mgmt_register_group();
+    os_mgmt_register_group();
 //#endif
-            setup();
-            printk("hello world\n");
-            while (1) {
-                loop();
-            }
-            return 0;
-        }
-        """)
+    printk("STARTING PROGRAM\n");
+    setup();
+    while (1) {
+        loop();
+    }
+    return 0;
+ }
+""")
     # This bit is for openthread, refactor this all later
     text += "\n" + AUTO_GEN_ZEPHYR_MAIN_END + "\n"
     return text

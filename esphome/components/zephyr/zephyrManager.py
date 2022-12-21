@@ -95,6 +95,7 @@ class ZephyrManager:
         # check if the bootloader has been flashed already
         boot_info_path = os.path.abspath(CORE.relative_build_path("boot_flashed.info"))
         bootloader = os.path.exists(boot_info_path)
+        build_flags = ' '.join(CORE.build_flags)
         with at_location(self._zephyr_base):
             os.environ['ZEPHYR_BASE'] = f"{self._zephyr_base}/zephyr"
             # run the west build command
@@ -107,6 +108,8 @@ class ZephyrManager:
                             "-d",
                             os.path.join(proj_dir, "build"),
                             os.path.join(proj_dir, str(CORE.name)),
+                            "--",
+                            f"-DCMAKE_CXX_FLAGS:='{build_flags}'"
                             ]
             build_command = self.board.pre_compile_application(build_command)
             result = run_external_process(*build_command)

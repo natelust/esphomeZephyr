@@ -69,6 +69,7 @@ class NRF52840Base(BaseZephyrBoard):
         &{device} {{
             clock-frequency = < {freq} >;
             status =  "ok" ;
+            compatible = "nordic,nrf-twim";
             pinctrl-0 = <&{device}_default_alt>;
             pinctrl-1 = <&{device}_sleep_alt>;
             pinctrl-names = "default", "sleep";

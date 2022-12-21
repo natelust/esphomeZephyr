@@ -137,6 +137,7 @@ bool random_bytes(uint8_t *data, size_t len) {
 #elif defined(USE_ZEPHYR)
   int err = sys_csrand_get(data, len);
   assert(err == 0);
+  return true;
 #else
 #error "No random source available for this configuration."
 #endif

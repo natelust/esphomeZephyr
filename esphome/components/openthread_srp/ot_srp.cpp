@@ -28,6 +28,7 @@ void OpenThreadSRP::setup() {
 
     uint8_t ip_found = 0;
     char addressAsString[40];
+    uint16_t timeout_counter = 0;
 
     struct openthread_context * context = openthread_get_default_context();
     // lock the mutex
@@ -37,14 +38,14 @@ void OpenThreadSRP::setup() {
     existing_host_name = otSrpClientBuffersGetHostNameString(context->instance, &size);
 
     if (len > size) { 
-        ESP_LOGW("OT SRP", "Hostname is too long, choose a shorter project name");
+        ESP_LOGW("OT_SRP", "Hostname is too long, choose a shorter project name");
         goto exit;
     }
 
     memcpy(existing_host_name, host_name.c_str(), len + 1);
     error = otSrpClientSetHostName(context->instance, existing_host_name);
     if (error != 0){
-        ESP_LOGW("OT SRP", "Could not set host name with srp server");
+        ESP_LOGW("OT_SRP", "Could not set host name with srp server");
         goto exit;
     }
 
@@ -56,26 +57,32 @@ void OpenThreadSRP::setup() {
         openthread_api_mutex_unlock(context);
         k_msleep(100);
         openthread_api_mutex_lock(context);
+        // After 5 seconds, if there are no addresses, continue boot
+        if (timeout_counter > 50) {
+            ESP_LOGW("OT_SRP", "Could not find the ip address of this device");
+            goto exit;
+        }
+        timeout_counter++;
     };
     if (error != 0){
-        ESP_LOGW("OT SRP", "Could not get the OMR prefix");
+        ESP_LOGW("OT_SRP", "Could not get the OMR prefix");
         goto exit;
     }
     omrPrefix = &aConfig.mPrefix;
     otIp6PrefixToString(omrPrefix, addressAsString, 40);
-    ESP_LOGW("OT SRP", "USING omr prefix %s", addressAsString);
+    ESP_LOGW("OT_SRP", "USING omr prefix %s", addressAsString);
     unicastAddrs = otIp6GetUnicastAddresses(context->instance);
     for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext){
         localIp = &addr->mAddress;
         if (otIp6PrefixMatch(&omrPrefix->mPrefix, localIp)) {
             ip_found = 1;
             otIp6AddressToString(localIp, addressAsString, 40);
-            ESP_LOGW("OT SRP", "USING %s for SRP address", addressAsString);
+            ESP_LOGW("OT_SRP", "USING %s for SRP address", addressAsString);
             break;
         }
     }
     if (ip_found == 0) {
-        ESP_LOGW("OT SRP", "Could not find the OMR address");
+        ESP_LOGW("OT_SRP", "Could not find the OMR address");
         goto exit;
     }
 
@@ -84,7 +91,7 @@ void OpenThreadSRP::setup() {
     memcpy(hostAddressArray, localIp, sizeof(*localIp));
     error = otSrpClientSetHostAddresses(context->instance, hostAddressArray, arrayLength);
     if (error != 0){
-        ESP_LOGW("OT SRP", "Could not set ip address with srp server");
+        ESP_LOGW("OT_SRP", "Could not set ip address with srp server");
         goto exit;
     }
 
@@ -102,7 +109,7 @@ void OpenThreadSRP::setup() {
     entry->mService.mNumTxtEntries = 0;
     error = otSrpClientAddService(context->instance, &entry->mService);
     if (error != 0){
-        ESP_LOGW("OT SRP", "Could not set service to advertise.");
+        ESP_LOGW("OT_SRP", "Could not set service to advertise.");
         goto exit;
     }
 
@@ -112,7 +119,7 @@ void OpenThreadSRP::setup() {
 exit:
     if (aborted) {
         this->mark_failed();
-        ESP_LOGW("OT SRP", "Setting SRP record failed, clear partial state");
+        ESP_LOGW("OT_SRP", "Setting SRP record failed, clear partial state");
         k_msleep(100);
         otSrpClientClearHostAndServices(context->instance);
         otSrpClientBuffersFreeAllServices(context->instance);
