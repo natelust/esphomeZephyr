@@ -57,8 +57,8 @@ void OpenThreadSRP::setup() {
         openthread_api_mutex_unlock(context);
         k_msleep(100);
         openthread_api_mutex_lock(context);
-        // After 5 seconds, if there are no addresses, continue boot
-        if (timeout_counter > 50) {
+        // After 30 seconds, if there are no addresses, continue boot
+        if (timeout_counter > 300) {
             ESP_LOGW("OT_SRP", "Could not find the ip address of this device");
             goto exit;
         }

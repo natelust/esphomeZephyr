@@ -121,6 +121,7 @@ CONFIG_SCHEMA = cv.All(
 
 @coroutine_with_priority(60.0)
 async def to_code(cofnig):
-    cg.add_define("LWIP_IPV6", 1)
+    #cg.add_define("USE_IPV6")
     cg.add_define("USE_OPENTHREAD")
     cg.add_global(cg.RawStatement("#include <zephyr/net/openthread.h>"))
+    cg.add_build_flag("-DLWIP_IPV6=1")

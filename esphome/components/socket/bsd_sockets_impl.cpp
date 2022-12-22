@@ -27,7 +27,7 @@ std::string format_sockaddr(const struct sockaddr_storage &storage) {
   if (storage.ss_family == AF_INET) {
     const struct sockaddr_in *addr = reinterpret_cast<const struct sockaddr_in *>(&storage);
     char buf[INET_ADDRSTRLEN];
-#ifdef USE_ZEPHY
+#ifdef USE_ZEPHYR
     const char *ret = zsock_inet_ntop(AF_INET, &addr->sin_addr, buf, sizeof(buf));
 #else
     const char *ret = inet_ntop(AF_INET, &addr->sin_addr, buf, sizeof(buf));
@@ -38,8 +38,8 @@ std::string format_sockaddr(const struct sockaddr_storage &storage) {
   } else if (storage.ss_family == AF_INET6) {
     const struct sockaddr_in6 *addr = reinterpret_cast<const struct sockaddr_in6 *>(&storage);
     char buf[INET6_ADDRSTRLEN];
-#ifdef USE_ZEPHY
-    const char *ret = zsock_inet_ntop(AF_INET, &addr->sin_addr, buf, sizeof(buf));
+#ifdef USE_ZEPHYR
+    const char *ret = zsock_inet_ntop(AF_INET, &addr->sin6_addr, buf, sizeof(buf));
 #else
     const char *ret = inet_ntop(AF_INET6, &addr->sin6_addr, buf, sizeof(buf));
 #endif
@@ -88,23 +88,19 @@ class BSDSocketImpl : public Socket {
 
   int getpeername(struct sockaddr *addr, socklen_t *addrlen) override {
 #ifdef USE_ZEPHYR
-    return -1;
+    return zsock_getpeername(fd_, addr, addrlen);
 #else
     return ::getpeername(fd_, addr, addrlen);
 #endif
   }
 
   std::string getpeername() override {
-#ifdef USE_ZEPHYR
-    return std::string("ZEPHYR_NOT_IMPLEMENTED");
-#else
     struct sockaddr_storage storage;
     socklen_t len = sizeof(storage);
     int err = this->getpeername((struct sockaddr *) &storage, &len);
     if (err != 0)
       return {};
     return format_sockaddr(storage);
-  #endif
   }
 
   int getsockname(struct sockaddr *addr, socklen_t *addrlen) override {
@@ -242,7 +238,11 @@ class BSDSocketImpl : public Socket {
 };
 
 std::unique_ptr<Socket> socket(int domain, int type, int protocol) {
+#ifdef USE_ZEPHYR
+  int ret = zsock_socket(domain, type, protocol);
+#else
   int ret = ::socket(domain, type, protocol);
+#endif
   if (ret == -1)
     return nullptr;
   return std::unique_ptr<Socket>{new BSDSocketImpl(ret)};

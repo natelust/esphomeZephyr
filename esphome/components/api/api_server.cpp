@@ -43,22 +43,24 @@ void APIServer::setup() {
     return;
   }
 
-  struct sockaddr_storage server;
+  //struct sockaddr_storage server;
   /*
-=======
-#ifdef USE_IPV6
-  struct sockaddr_in6 server;
+#ifdef USE_IPV6 
+  struct sockaddr_storage server;
   memset(&server, 0, sizeof(server));
-  server.sin6_family = AF_INET6;
-  server.sin6_port = htons(this->port_);
+  auto *server_view = reinterpret_cast<sockaddr_in6 *>(&server);
+  server_view->sin6_family = AF_INET6;
+  server_view->sin6_port = htons(this->port_);
+  server_view->sin6_addr = in6addr_any;
+  err = socket_->bind((struct sockaddr *) &server, sizeof(sockaddr_in6));
 #else
-  struct sockaddr_in server;
-  memset(&server, 0, sizeof(server));
-  server.sin_family = AF_INET;
-  server.sin_addr.s_addr = ESPHOME_INADDR_ANY;
-  server.sin_port = htons(this->port_);
-#endif
 */
+  struct sockaddr_storage server;
+  //struct sockaddr_in server;
+  //memset(&server, 0, sizeof(server));
+  //server.sin_family = AF_INET;
+  //server.sin_addr.s_addr = ESPHOME_INADDR_ANY;
+  //server.sin_port = htons(this->port_);
 
   socklen_t sl = socket::set_sockaddr_any((struct sockaddr *) &server, sizeof(server), htons(this->port_));
   if (sl == 0) {
@@ -66,8 +68,9 @@ void APIServer::setup() {
     this->mark_failed();
     return;
   }
-
   err = socket_->bind((struct sockaddr *) &server, sl);
+//#endif
+
   if (err != 0) {
     ESP_LOGW(TAG, "Socket unable to bind: errno %d", errno);
     this->mark_failed();
